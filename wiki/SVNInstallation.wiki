@@ -1,0 +1,5 @@
+#summary Instructions and notes for installing SVN to download, modify, and commit the project's source.
+
+= Instructions =
+
+# Download Tortoise SVN from http://tortoisesvn.net/
