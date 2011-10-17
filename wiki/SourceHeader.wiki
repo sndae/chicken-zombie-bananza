@@ -1,3 +1,4 @@
+#summary Header that should be at the top of every source file
 {{{
 /**
  * Copyright (c) 2011, Chicken Zombie Bonanza Project
