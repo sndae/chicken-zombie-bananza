@@ -2,4 +2,19 @@
 
 = Instructions =
 
-# Download Tortoise SVN from http://tortoisesvn.net/
+Checkout Instructions
+  # Download Tortoise SVN from http://tortoisesvn.net/
+  # Checkout the project from https://chicken-zombie-bananza.googlecode.com/svn/trunk/ to somewhere on your computer
+  # Use your Google email address and your Google Code password; it's different from your Google password!, you can get it at http://code.google.com/hosting/settings
+  # Make sure you have Eclipse installed with the Android SDK, with the Google APIs Version 8 downloaded
+  # Start up Eclipse and create a new Android project and 'Create a project from existing source and change the location to the 'project' directory of the checkout folder
+    * Make sure Google API's Version 8 is selected in the build target
+  # Run the application in the Android Emulator to verify that everything is working
+
+= Notes =
+
+Rules on making a commit
+  # Don't commit if it will break the build!
+  # Make sure you are committing all the files you need to.
+  # You don't need to write a paragraph, but a short and sweet comment of what you did will help others see what you have done.
+  # When working on a larger task, logically subdivide the task into subtasks and make commits when those tasks are complete. Don't wait until you are done to commit.
