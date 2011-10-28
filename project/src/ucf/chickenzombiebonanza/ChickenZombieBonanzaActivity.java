@@ -26,14 +26,78 @@
  */
 package ucf.chickenzombiebonanza;
 
-import android.app.Activity;
-import android.os.Bundle;
+import com.google.android.maps.GeoPoint;
+import com.google.android.maps.MapActivity;
+import com.google.android.maps.MapController;
+import com.google.android.maps.MapView;
 
-public class ChickenZombieBonanzaActivity extends Activity {
+import android.content.Context;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
+import android.os.Bundle;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
+
+public class ChickenZombieBonanzaActivity extends MapActivity {
     /** Called when the activity is first created. */
+	
+	private MapController mapController;
+	private MapView mapView;
+	private LocationManager locationManager;
+	
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    public void onCreate(Bundle bundle) {
+        super.onCreate(bundle);
         setContentView(R.layout.main);
+        
+		// create a map view		
+		mapView = (MapView) findViewById(R.id.mapview);
+		mapView.setBuiltInZoomControls(true);
+		mapView.setSatellite(false);
+		
+		mapController = mapView.getController();
+		mapController.setZoom(14); // Zoom 1 is world view
+		
+		locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+		locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0,
+				0, new GeoUpdateHandler());
+		
+		Button settingsButton = (Button)findViewById(R.id.settingsButton);
+		settingsButton.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View arg0) {
+				//TODO: Juan - Display settings menu
+			}
+		});
     }
+    
+	@Override
+	protected boolean isRouteDisplayed() {
+		return false;
+	}
+        
+	public class GeoUpdateHandler implements LocationListener {
+
+		@Override
+		public void onLocationChanged(Location location) {
+			int lat = (int) (location.getLatitude() * 1E6);
+			int lng = (int) (location.getLongitude() * 1E6);
+			GeoPoint point = new GeoPoint(lat, lng);
+			mapController.animateTo(point); //	mapController.setCenter(point);
+		}
+
+		@Override
+		public void onProviderDisabled(String provider) {
+		}
+
+		@Override
+		public void onProviderEnabled(String provider) {
+		}
+
+		@Override
+		public void onStatusChanged(String provider, int status, Bundle extras) {
+		}
+	}
 }
