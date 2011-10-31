@@ -34,7 +34,7 @@ package ucf.chickenzombiebonanza.game;
 public interface GameStateListener {
 	
 	/**
-	 * Notifies that the the game's state has changed.
+	 * Notifies that the game's state has changed.
 	 * 
 	 * @param state The state the game is now in.
 	 * @param obj The object represents the state the game is in.
