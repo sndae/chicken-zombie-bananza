@@ -11,6 +11,13 @@ Checkout Instructions
     * Make sure Google API's Version 8 is selected in the build target
   # Run the application in the Android Emulator to verify that everything is working
 
+Commit Instructions
+  # ALWAYS do an SVN Update before you commit to make sure you have the latest revision.
+  # Get your Google Code SVN password from https://code.google.com/hosting/settings
+  # In the folder where you checked out the source, right click and select 'SVN Commit'
+  # Make sure all the files you want to commit are selected and that the ones you don't are not. Type a brief message explaining what this commit is about.
+  # Press OK and enter your Gmail address as the user name and the password you just got. TortoiseSVN will inform you if there is a problem with the commit.
+
 = Notes =
 
 Rules on making a commit
