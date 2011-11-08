@@ -3,4 +3,5 @@
     <string name="hello">Hello World, ChickenZombieBonanzaActivity!</string>
     <string name="app_name">ChickenZombieBonanza</string>
     <string name="settingButton">Settings</string>
+    <color name="white">#FFFFFF</color>
 </resources>
