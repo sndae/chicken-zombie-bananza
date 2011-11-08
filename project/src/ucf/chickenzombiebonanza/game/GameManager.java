@@ -38,16 +38,31 @@ import ucf.chickenzombiebonanza.game.entity.GameEntity;
 
 public class GameManager {
 	
-	private GameStateEnum currentGameState = GameStateEnum.NO_GAME_STATE;
+	private static GameManager instance = null;
 	
 	private List<GameStateListener> stateListeners = new ArrayList<GameStateListener>();
 	
 	private List<GameEntity> gameEntities = new ArrayList<GameEntity>();
 	
+	public static GameManager getInstance() {
+		if(instance == null) {
+			instance = new GameManager();
+			instance.init();
+		}
+		return instance;
+	}
+	
 	/**
 	 * 
 	 */
-	public GameManager() {
+	private GameManager() {
+		
+	}
+	
+	/**
+	 * 
+	 */
+	private void init() {
 		
 	}
 	
@@ -75,13 +90,21 @@ public class GameManager {
 		
 	}
 	
+	/**
+	 * 
+	 * @param state
+	 * @param obj
+	 */
 	public void updateGameState(GameStateEnum state, Object obj) {
-		currentGameState = state;
 		for(GameStateListener i : stateListeners) {
-			i.gameStateChanged(currentGameState, obj);
+			i.gameStateChanged(state, obj);
 		}
 	}
 	
+	/**
+	 * 
+	 * @param state
+	 */
 	public void updateGameState(GameStateEnum state) {
 		updateGameState(state, null);
 	}

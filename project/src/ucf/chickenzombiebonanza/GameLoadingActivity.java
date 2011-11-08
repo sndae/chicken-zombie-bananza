@@ -24,8 +24,16 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package ucf.chickenzombiebonanza.common.sensor;
+package ucf.chickenzombiebonanza;
 
-public class OrientationPublisher {
+import android.os.Bundle;
+
+public class GameLoadingActivity extends AbstractGameActivity {
+	
+    @Override
+    public void onCreate(Bundle bundle) {
+        super.onCreate(bundle);
+        setContentView(R.layout.loading);
+    }
 
 }

@@ -13,7 +13,7 @@ public class PowerUpEntity extends GameEntity {
 	}
 
 	@Override
-	public void destroy() {
+	public void destroyEntity() {
 		// TODO Auto-generated method stub
 
 	}

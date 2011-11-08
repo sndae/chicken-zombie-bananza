@@ -28,8 +28,11 @@ package ucf.chickenzombiebonanza.game.entity;
 
 import ucf.chickenzombiebonanza.common.GeocentricCoordinate;
 import ucf.chickenzombiebonanza.common.LocalOrientation;
+import ucf.chickenzombiebonanza.common.sensor.OrientationListener;
+import ucf.chickenzombiebonanza.common.sensor.PositionListener;
+import ucf.chickenzombiebonanza.common.sensor.PositionPublisher;
 
-public abstract class GameEntity {
+public abstract class GameEntity implements PositionListener, OrientationListener {
 	
 	private static int nextAvailableId = 0;
 	
@@ -38,6 +41,8 @@ public abstract class GameEntity {
 	private GeocentricCoordinate position;
 	
 	private LocalOrientation orientation;
+	
+	private final PositionPublisher positionPublisher = new PositionPublisher();
 	
 	public GameEntity(GeocentricCoordinate position, LocalOrientation orientation) {
 		this.id = nextAvailableId;
@@ -59,7 +64,20 @@ public abstract class GameEntity {
 		return orientation;
 	}
 	
-	abstract public void destroy();
+	public final PositionPublisher getPositionPublisher() {
+		return positionPublisher;
+	}
+	
+	public final void receivePositionUpdate(GeocentricCoordinate coordinate) {
+		this.position = coordinate;
+		positionPublisher.updatePosition(this.position);
+	}
+	
+	public final void receiveOrientationUpdate(LocalOrientation orientation) {
+		this.orientation = orientation;
+	}
+	
+	abstract public void destroyEntity();
 	
 	abstract public void interactWith(GameEntity entity);
 
