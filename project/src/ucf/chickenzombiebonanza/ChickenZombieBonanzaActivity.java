@@ -26,19 +26,24 @@
  */
 package ucf.chickenzombiebonanza;
 
+import ucf.chickenzombiebonanza.settings;
+import ucf.chickenzombiebonanza.ChickenZombieBonanzaActivity;
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapActivity;
 import com.google.android.maps.MapController;
 import com.google.android.maps.MapView;
 
 import android.content.Context;
+import android.content.Intent;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+
 
 public class ChickenZombieBonanzaActivity extends MapActivity {
     /** Called when the activity is first created. */
@@ -46,6 +51,9 @@ public class ChickenZombieBonanzaActivity extends MapActivity {
 	private MapController mapController;
 	private MapView mapView;
 	private LocationManager locationManager;
+	private Button mSettingButton;//The setting buttons
+	
+	public static final String TAG = "Player";
 	
     @Override
     public void onCreate(Bundle bundle) {
@@ -56,6 +64,8 @@ public class ChickenZombieBonanzaActivity extends MapActivity {
 		mapView = (MapView) findViewById(R.id.mapview);
 		mapView.setBuiltInZoomControls(true);
 		mapView.setSatellite(false);
+		mSettingButton = (Button) findViewById(R.id.settingsButton);//settingsButton 
+		
 		
 		mapController = mapView.getController();
 		mapController.setZoom(14); // Zoom 1 is world view
@@ -64,13 +74,22 @@ public class ChickenZombieBonanzaActivity extends MapActivity {
 		locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0,
 				0, new GeoUpdateHandler());
 		
-		Button settingsButton = (Button)findViewById(R.id.settingsButton);
+		mSettingButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                Log.d(TAG, "mAddAccountButton clicked");
+                System.out.println("--------------------WTF BOOOOMMM!!!!");
+                //Toast.makeText(this, "Button clicked! ", Toast.LENGTH_SHORT).show();
+                launchSettings();
+            }
+        });
+		
+		/*Button settingsButton = (Button)findViewById(R.id.settingsButton);
 		settingsButton.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View arg0) {
 				//TODO: Juan - Display settings menu
 			}
-		});
+		});*/
     }
     
 	@Override
@@ -100,4 +119,9 @@ public class ChickenZombieBonanzaActivity extends MapActivity {
 		public void onStatusChanged(String provider, int status, Bundle extras) {
 		}
 	}
+	
+	protected void launchSettings() {
+        Intent i = new Intent(this, settings.class);
+        startActivity(i);
+    }
 }
