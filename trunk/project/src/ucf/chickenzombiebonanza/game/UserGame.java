@@ -24,8 +24,30 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package ucf.chickenzombiebonanza.common.sensor;
+package ucf.chickenzombiebonanza.game;
 
-public class OrientationPublisher {
+/**
+ * An interface for initializing and manipulating a game at a high level
+ * 
+ * @author jleonard
+ */
+public interface UserGame {
+	
+	/**
+	 * Is the game currently running
+	 * 
+	 * @return boolean True if the game is currently running
+	 */
+	public boolean isGameActive();
+	
+	/**
+	 * Initializes the game.
+	 */
+	public void initializeGame();
+	
+	/**
+	 * Starts the game.
+	 */
+	public void startGame();
 
 }

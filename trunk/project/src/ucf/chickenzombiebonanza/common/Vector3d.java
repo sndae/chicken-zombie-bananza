@@ -10,15 +10,15 @@ public class Vector3d {
 		this.w = w;
 	}
 	
-	public double getU() {
+	public double u() {
 		return u;
 	}
 	
-	public double getV() {
+	public double v() {
 		return v;
 	}
 	
-	public double getW() {
+	public double w() {
 		return w;
 	}
 }

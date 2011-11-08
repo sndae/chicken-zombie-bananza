@@ -44,7 +44,7 @@ public class WaypointEntity extends GameEntity {
 	}
 
 	@Override
-	public void destroy() {
+	public void destroyEntity() {
 		activationListeners.clear();
 	}
 
