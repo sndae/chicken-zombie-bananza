@@ -33,31 +33,50 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 
-public abstract class AbstractGameActivity extends Activity implements GameStateListener {
+/**
+ * 
+ */
+public abstract class AbstractGameActivity extends Activity implements
+	GameStateListener {
 
     @Override
     public void onCreate(Bundle bundle) {
-        super.onCreate(bundle);
-        
-        GameManager.getInstance().addStateListener(this);
+	super.onCreate(bundle);
+	AbstractGameActivity.onCreateStatic(this);
     }
-    
+
     @Override
     public void onStop() {
-    	super.onStop();
-    	
-    	GameManager.getInstance().removeStateListener(this);    	
+	super.onStop();
+	AbstractGameActivity.onStopStatic(this);
     }
 
-	@Override
-	public void gameStateChanged(GameStateEnum state, Object obj) {
-		if(state == GameStateEnum.GAME_LOADING) {
-		      Intent prefIntent = new Intent(this,GameLoadingActivity.class);
-		      this.startActivity(prefIntent);
-		} else if (state == GameStateEnum.GAME_NAVIGATION) {
-		      Intent prefIntent = new Intent(this,NavigationGameActivity.class);
-		      this.startActivity(prefIntent);
-		}
-	}
+    @Override
+    public void gameStateChanged(GameStateEnum state, Object obj) {
+	AbstractGameActivity.gameStateChangedStatic(this, state, obj);
+    }
 
+    public static void onCreateStatic(GameStateListener listener) {
+	GameManager.getInstance().addStateListener(listener);
+    }
+
+    public static void onStopStatic(GameStateListener listener) {
+	GameManager.getInstance().removeStateListener(listener);
+    }
+
+    public static void gameStateChangedStatic(Activity activity,
+	    GameStateEnum state, Object obj) {
+	if (state == GameStateEnum.GAME_LOADING) {
+	    Intent loadIntent = new Intent(activity, GameLoadingActivity.class);
+	    activity.startActivity(loadIntent);
+	} else if (state == GameStateEnum.GAME_NAVIGATION) {
+	    Intent navigationIntent = new Intent(activity,
+		    NavigationGameActivity.class);
+	    activity.startActivity(navigationIntent);
+	} else if (state == GameStateEnum.GAME_SETTINGS) {
+	    Intent settingsIntent = new Intent(activity,
+		    GameSettingsActivity.class);
+	    activity.startActivity(settingsIntent);
+	}
+    }
 }

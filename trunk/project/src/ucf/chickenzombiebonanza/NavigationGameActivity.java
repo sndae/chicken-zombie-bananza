@@ -26,6 +26,9 @@
  */
 package ucf.chickenzombiebonanza;
 
+import ucf.chickenzombiebonanza.game.GameManager;
+import ucf.chickenzombiebonanza.game.GameStateEnum;
+
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapController;
 import com.google.android.maps.MapView;
@@ -65,6 +68,9 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 
+/**
+ * 
+ */
 public class NavigationGameActivity extends AbstractGameMapActivity {
     /** Called when the activity is first created. */
 	
@@ -93,7 +99,7 @@ public class NavigationGameActivity extends AbstractGameMapActivity {
 		settingsButton.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View arg0) {
-				//TODO: Juan - Display settings menu
+			    GameManager.getInstance().updateGameState(GameStateEnum.GAME_SETTINGS);
 			}
 		});
     }

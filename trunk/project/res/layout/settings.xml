@@ -6,7 +6,7 @@
     android:layout_height="fill_parent"
     android:weightSum="1">
 	<LinearLayout android:layout_height="wrap_content" android:layout_width="match_parent" android:id="@+id/linearLayout1">
-		<Button android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/backButton" android:text="@string/settingButton"></Button>
+		<Button android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/settingButton" android:id="@+id/settingsButton"></Button>
 	</LinearLayout>
 	<Button android:text="Back" android:layout_height="wrap_content" android:layout_width="wrap_content" android:id="@+id/backButton"></Button>
 </LinearLayout>
