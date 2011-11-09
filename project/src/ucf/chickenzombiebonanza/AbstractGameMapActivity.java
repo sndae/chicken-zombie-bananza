@@ -26,38 +26,33 @@
  */
 package ucf.chickenzombiebonanza;
 
-import ucf.chickenzombiebonanza.game.GameManager;
 import ucf.chickenzombiebonanza.game.GameStateEnum;
 import ucf.chickenzombiebonanza.game.GameStateListener;
 
-import android.content.Intent;
 import android.os.Bundle;
 
 import com.google.android.maps.MapActivity;
 
-public abstract class AbstractGameMapActivity extends MapActivity implements GameStateListener {
+/**
+ * 
+ */
+public abstract class AbstractGameMapActivity extends MapActivity implements
+	GameStateListener {
+
     @Override
     public void onCreate(Bundle bundle) {
-        super.onCreate(bundle);
-        
-        GameManager.getInstance().addStateListener(this);
-    }
-    
-    @Override
-    public void onStop() {
-    	super.onStop();
-    	
-    	GameManager.getInstance().removeStateListener(this);    	
+	super.onCreate(bundle);
+	AbstractGameActivity.onCreateStatic(this);
     }
 
-	@Override
-	public void gameStateChanged(GameStateEnum state, Object obj) {
-		if(state == GameStateEnum.GAME_LOADING) {
-		      Intent prefIntent = new Intent(this,GameLoadingActivity.class);
-		      this.startActivity(prefIntent);
-		} else if (state == GameStateEnum.GAME_NAVIGATION) {
-		      Intent prefIntent = new Intent(this,NavigationGameActivity.class);
-		      this.startActivity(prefIntent);
-		}
-	}
+    @Override
+    public void onStop() {
+	super.onStop();
+	AbstractGameActivity.onStopStatic(this);
+    }
+
+    @Override
+    public void gameStateChanged(GameStateEnum state, Object obj) {
+	AbstractGameActivity.gameStateChangedStatic(this, state, obj);
+    }
 }
