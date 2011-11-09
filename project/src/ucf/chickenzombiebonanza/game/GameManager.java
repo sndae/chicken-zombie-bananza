@@ -34,96 +34,112 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import ucf.chickenzombiebonanza.common.GeocentricCoordinate;
 import ucf.chickenzombiebonanza.game.entity.GameEntity;
 
-public class GameManager {
-	
-	private static GameManager instance = null;
-	
-	private List<GameStateListener> stateListeners = new ArrayList<GameStateListener>();
-	
-	private List<GameEntity> gameEntities = new ArrayList<GameEntity>();
-	
-	public static GameManager getInstance() {
-		if(instance == null) {
-			instance = new GameManager();
-			instance.init();
+public class GameManager implements GameSettingsChangeListener {
+
+    private static GameManager instance = null;
+
+    private List<GameStateListener> stateListeners = new ArrayList<GameStateListener>();
+
+    private List<GameEntity> gameEntities = new ArrayList<GameEntity>();
+
+    private final GameSettings gameSettings = new GameSettings();
+
+    public static GameManager getInstance() {
+	if (instance == null) {
+	    instance = new GameManager();
+	    instance.init();
+	}
+	return instance;
+    }
+
+    private GameManager() {
+	gameSettings.registerGameSettingsChangeListener(this);
+    }
+
+    private void init() {
+
+    }
+
+    public void start() {
+
+	updateGameState(GameStateEnum.GAME_LOADING);
+	long startTime = System.currentTimeMillis();
+	Gdc_To_Gcc_Converter.Init(new WE_Ellipsoid());
+	long endTime = System.currentTimeMillis();
+	final long timeLeft = 5000 - (endTime - startTime);
+	if (timeLeft > 0) {
+	    Timer waitTimer = new Timer();
+	    waitTimer.schedule(new TimerTask() {
+		@Override
+		public void run() {
+		    updateGameState(GameStateEnum.GAME_NAVIGATION);
+
 		}
-		return instance;
+	    }, timeLeft);
+	} else {
+	    updateGameState(GameStateEnum.GAME_NAVIGATION);
 	}
-	
-	/**
-	 * 
-	 */
-	private GameManager() {
-		
+
+    }
+
+    /**
+     * 
+     * @return
+     */
+    public GameSettings getGameSettings() {
+	return gameSettings;
+    }
+
+    /**
+     * 
+     * @param state
+     * @param obj
+     */
+    public void updateGameState(GameStateEnum state, Object obj) {
+	for (GameStateListener i : stateListeners) {
+	    i.gameStateChanged(state, obj);
 	}
-	
-	/**
-	 * 
-	 */
-	private void init() {
-		
-	}
-	
-	/**
-	 * 
-	 */
-	public void start() {
-		
-		updateGameState(GameStateEnum.GAME_LOADING);
-		long startTime = System.currentTimeMillis();
-		Gdc_To_Gcc_Converter.Init(new WE_Ellipsoid());
-		long endTime = System.currentTimeMillis();
-		final long timeLeft = 5000 - (endTime - startTime);
-		if(timeLeft > 0) {
-			Timer waitTimer = new Timer();
-			waitTimer.schedule(new TimerTask(){
-				@Override
-				public void run() {
-					updateGameState(GameStateEnum.GAME_NAVIGATION);
-					
-				}}, timeLeft);
-		} else {
-			updateGameState(GameStateEnum.GAME_NAVIGATION);
-		}
-		
-	}
-	
-	/**
-	 * 
-	 * @param state
-	 * @param obj
-	 */
-	public void updateGameState(GameStateEnum state, Object obj) {
-		for(GameStateListener i : stateListeners) {
-			i.gameStateChanged(state, obj);
-		}
-	}
-	
-	/**
-	 * 
-	 * @param state
-	 */
-	public void updateGameState(GameStateEnum state) {
-		updateGameState(state, null);
-	}
-	
-	/**
-	 * Add an object to receive notifications when the game state changes
-	 * @param listener The object to receive notifications
-	 */
-	public void addStateListener(GameStateListener listener) {
-		stateListeners.add(listener);
-	}
-	
-	/**
-	 * Remove an object that receive notifications about the game state changes
-	 * @param listener The object that receives notifications
-	 */
-	public void removeStateListener(GameStateListener listener) {
-		stateListeners.add(listener);
-	}
-	
+    }
+
+    /**
+     * 
+     * @param state
+     */
+    public void updateGameState(GameStateEnum state) {
+	updateGameState(state, null);
+    }
+
+    /**
+     * Add an object to receive notifications when the game state changes
+     * 
+     * @param listener
+     *            The object to receive notifications
+     */
+    public void addStateListener(GameStateListener listener) {
+	stateListeners.add(listener);
+    }
+
+    /**
+     * Remove an object that receive notifications about the game state changes
+     * 
+     * @param listener
+     *            The object that receives notifications
+     */
+    public void removeStateListener(GameStateListener listener) {
+	stateListeners.add(listener);
+    }
+
+    @Override
+    public void onPlayAreaCenterChanged(GeocentricCoordinate position) {
+
+    }
+
+    @Override
+    public void onPlayAreaRadiusChanged(float radius) {
+
+    }
 
 }
