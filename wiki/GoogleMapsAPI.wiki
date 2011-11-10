@@ -16,7 +16,6 @@
   android:layout_width="fill_parent"
   android:layout_height="fill_parent"
   android:apiKey="0k1QEo43QU-FGvRxRcqACboh9hqLuYnbfK2uYPg"
-                 />
 />
 }}}
 = Release Key =
