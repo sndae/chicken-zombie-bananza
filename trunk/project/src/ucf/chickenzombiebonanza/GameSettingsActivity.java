@@ -57,5 +57,10 @@ public final class GameSettingsActivity extends AbstractGameActivity {
 	    }
 	});
     }
+    
+    @Override
+    public void onBackPressed() {
+	GameManager.getInstance().updateGameState(GameStateEnum.GAME_NAVIGATION);
+    }
 
 }

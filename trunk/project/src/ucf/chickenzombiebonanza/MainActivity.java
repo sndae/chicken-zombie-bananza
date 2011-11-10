@@ -37,6 +37,16 @@ public class MainActivity extends AbstractGameActivity {
         setContentView(R.layout.loading);
         
         GameManager.getInstance().start();
-        
+    }
+    
+    @Override
+    public void onStop() {
+	super.onStop();
+	finish();
+    }
+    
+    @Override
+    public void onBackPressed() {
+	return;
     }
 }

@@ -35,6 +35,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import ucf.chickenzombiebonanza.common.GeocentricCoordinate;
+import ucf.chickenzombiebonanza.common.sensor.PositionPublisher;
 import ucf.chickenzombiebonanza.game.entity.GameEntity;
 
 public class GameManager implements GameSettingsChangeListener {
@@ -46,6 +47,9 @@ public class GameManager implements GameSettingsChangeListener {
     private List<GameEntity> gameEntities = new ArrayList<GameEntity>();
 
     private final GameSettings gameSettings = new GameSettings();
+    
+    //Temporary
+    private PositionPublisher playerPositionPublisher = null;
 
     public static GameManager getInstance() {
 	if (instance == null) {
@@ -61,6 +65,10 @@ public class GameManager implements GameSettingsChangeListener {
 
     private void init() {
 
+    }
+    
+    public void setPlayerPositionPublisher(PositionPublisher publisher) {
+	playerPositionPublisher = publisher;
     }
 
     public void start() {
