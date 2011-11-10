@@ -24,7 +24,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package ucf.chickenzombiebonanza.common.sensor.impl;
+package ucf.chickenzombiebonanza.android.sensor;
 
 import geotransform.coords.Gcc_Coord_3d;
 import geotransform.coords.Gdc_Coord_3d;

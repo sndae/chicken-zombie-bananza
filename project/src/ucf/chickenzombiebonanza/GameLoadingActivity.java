@@ -35,5 +35,16 @@ public class GameLoadingActivity extends AbstractGameActivity {
         super.onCreate(bundle);
         setContentView(R.layout.loading);
     }
+    
+    @Override
+    public void onStop() {
+	super.onStop();
+	finish();
+    }
+    
+    @Override
+    public void onBackPressed() {
+	return;
+    }
 
 }
