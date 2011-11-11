@@ -31,7 +31,7 @@ import java.util.List;
 
 import ucf.chickenzombiebonanza.common.GeocentricCoordinate;
 
-public class PositionPublisher {
+public class PositionPublisher extends Sensor {
 	
 	private GeocentricCoordinate currentPosition = new GeocentricCoordinate();
 	
@@ -42,6 +42,7 @@ public class PositionPublisher {
 	}
 	
 	public void updatePosition(GeocentricCoordinate coordinate) {
+		this.setSensorState(true);
 		currentPosition = coordinate;
 		for(PositionListener i : positionListeners) {
 			i.receivePositionUpdate(currentPosition);

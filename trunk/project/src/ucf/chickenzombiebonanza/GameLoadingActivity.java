@@ -29,22 +29,22 @@ package ucf.chickenzombiebonanza;
 import android.os.Bundle;
 
 public class GameLoadingActivity extends AbstractGameActivity {
-	
-    @Override
-    public void onCreate(Bundle bundle) {
-        super.onCreate(bundle);
-        setContentView(R.layout.loading);
-    }
-    
-    @Override
-    public void onStop() {
-	super.onStop();
-	finish();
-    }
-    
-    @Override
-    public void onBackPressed() {
-	return;
-    }
+
+	@Override
+	public void onCreate(Bundle bundle) {
+		super.onCreate(bundle);
+		setContentView(R.layout.loading);
+	}
+
+	@Override
+	public void onStop() {
+		super.onStop();
+		finish();
+	}
+
+	@Override
+	public void onBackPressed() {
+		return;
+	}
 
 }

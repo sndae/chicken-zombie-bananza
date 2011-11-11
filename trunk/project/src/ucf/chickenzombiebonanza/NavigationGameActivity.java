@@ -29,13 +29,9 @@ package ucf.chickenzombiebonanza;
 import ucf.chickenzombiebonanza.game.GameManager;
 import ucf.chickenzombiebonanza.game.GameStateEnum;
 
-import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapController;
 import com.google.android.maps.MapView;
 
-import android.content.Context;
-import android.location.Location;
-import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.view.View;
@@ -46,69 +42,42 @@ import android.widget.Button;
  * 
  */
 public class NavigationGameActivity extends AbstractGameMapActivity {
-    /** Called when the activity is first created. */
+	/** Called when the activity is first created. */
 
-    private MapController mapController;
-    private MapView mapView;
-    private LocationManager locationManager;
-
-    @Override
-    public void onCreate(Bundle bundle) {
-	super.onCreate(bundle);
-	setContentView(R.layout.main);
-
-	// create a map view
-	mapView = (MapView) findViewById(R.id.mapview);
-	mapView.setBuiltInZoomControls(true);
-	mapView.setSatellite(false);
-
-	mapController = mapView.getController();
-	mapController.setZoom(14); // Zoom 1 is world view
-
-	locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-	locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0,
-		0, new GeoUpdateHandler());
-
-	Button settingsButton = (Button) findViewById(R.id.settingsButton);
-	settingsButton.setOnClickListener(new OnClickListener() {
-	    @Override
-	    public void onClick(View arg0) {
-		GameManager.getInstance().updateGameState(
-			GameStateEnum.GAME_SETTINGS);
-	    }
-	});
-    }
-    
-    @Override
-    public void onBackPressed() {
-	return;
-    }
-
-    @Override
-    protected boolean isRouteDisplayed() {
-	return false;
-    }
-
-    public class GeoUpdateHandler implements LocationListener {
+	private MapController mapController;
+	private MapView mapView;
+	private LocationManager locationManager;
 
 	@Override
-	public void onLocationChanged(Location location) {
-	    int lat = (int) (location.getLatitude() * 1E6);
-	    int lng = (int) (location.getLongitude() * 1E6);
-	    GeoPoint point = new GeoPoint(lat, lng);
-	    mapController.animateTo(point); // mapController.setCenter(point);
+	public void onCreate(Bundle bundle) {
+		super.onCreate(bundle);
+		setContentView(R.layout.main);
+
+		// create a map view
+		mapView = (MapView) findViewById(R.id.mapview);
+		mapView.setBuiltInZoomControls(true);
+		mapView.setSatellite(false);
+
+		mapController = mapView.getController();
+		mapController.setZoom(14); // Zoom 1 is world view
+
+		Button settingsButton = (Button) findViewById(R.id.settingsButton);
+		settingsButton.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View arg0) {
+				GameManager.getInstance().updateGameState(
+						GameStateEnum.GAME_SETTINGS);
+			}
+		});
 	}
 
 	@Override
-	public void onProviderDisabled(String provider) {
+	public void onBackPressed() {
+		return;
 	}
 
 	@Override
-	public void onProviderEnabled(String provider) {
+	protected boolean isRouteDisplayed() {
+		return false;
 	}
-
-	@Override
-	public void onStatusChanged(String provider, int status, Bundle extras) {
-	}
-    }
 }
