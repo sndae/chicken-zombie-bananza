@@ -38,7 +38,7 @@ public class MainActivity extends AbstractGameActivity {
 		super.onCreate(bundle);
 		setContentView(R.layout.loading);
 
-		GameManager.getInstance().start(new GpsListener(),
+		GameManager.getInstance().start(new GpsListener(this),
 				new GyroscopeListener());
 	}
 

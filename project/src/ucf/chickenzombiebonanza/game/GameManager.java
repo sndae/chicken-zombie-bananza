@@ -36,6 +36,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import android.util.Log;
+
 import ucf.chickenzombiebonanza.common.GeocentricCoordinate;
 import ucf.chickenzombiebonanza.common.sensor.OrientationPublisher;
 import ucf.chickenzombiebonanza.common.sensor.PositionPublisher;
@@ -68,7 +70,7 @@ public class GameManager implements GameSettingsChangeListener {
 
 	}
 
-	public void start(PositionPublisher positionPublisher, OrientationPublisher orientationPublisher) {
+	public void start(final PositionPublisher positionPublisher, final OrientationPublisher orientationPublisher) {
 		updateGameState(GameStateEnum.GAME_LOADING);
 
 		final AtomicBoolean loadingScreenDurationMet = new AtomicBoolean(false);
@@ -81,68 +83,51 @@ public class GameManager implements GameSettingsChangeListener {
 				loadingScreenDurationMet.set(true);
 			}
 		}, 5000);
-
-		Gdc_To_Gcc_Converter.Init(new WE_Ellipsoid());
-		Gcc_To_Gdc_Converter.Init(new WE_Ellipsoid());
 		
-		final AtomicBoolean orientationSensorActive = new AtomicBoolean(false);
-		
-		SensorStatusListener orientationListener = new SensorStatusListener(){
+		Thread loadThread = new Thread() {
 			@Override
-			public void onSensorActive() {
-				orientationSensorActive.set(true);
+			public void run() {
+				Gdc_To_Gcc_Converter.Init(new WE_Ellipsoid());
+				Gcc_To_Gdc_Converter.Init(new WE_Ellipsoid());
+				
+				if(!orientationPublisher.isSensorActive()) {
+					
+    				while(!orientationPublisher.isSensorActive()) {
+    					synchronized(this) {
+    		    			try {
+    		    				this.wait(100);
+    		    			} catch (InterruptedException e) {
+    		    			}
+    					}
+    				}
+				}
+				
+				if(!positionPublisher.isSensorActive()) {
+				    				
+    				while(!positionPublisher.isSensorActive()) {
+    					synchronized(this) {
+    		    			try {
+    		    				this.wait(100);
+    		    			} catch (InterruptedException e) {
+    		    			}
+    					}
+    				}
+				}
+				
+				while(!loadingScreenDurationMet.get()) {
+					synchronized(this) {
+		        		try {
+		        			this.wait(100);
+		        		} catch (InterruptedException e) {
+		        		}
+					}
+				}
+				
+				updateGameState(GameStateEnum.GAME_NAVIGATION);
 			}
-
-			@Override
-			public void onSensorInactive() {
-				//Do nothing
-			}			
 		};
 		
-		orientationPublisher.registerSensorStatusListener(orientationListener);
-		
-		while(!orientationSensorActive.get()) {
-			try {
-				this.wait(100);
-			} catch (InterruptedException e) {
-			}
-		}
-		
-		orientationPublisher.unregisterSensorStatusListener(orientationListener);
-		
-		final AtomicBoolean positionSensorActive = new AtomicBoolean(false);
-		
-		SensorStatusListener positionListener = new SensorStatusListener(){
-			@Override
-			public void onSensorActive() {
-				positionSensorActive.set(true);
-			}
-
-			@Override
-			public void onSensorInactive() {
-				//Do nothing
-			}			
-		};
-		
-		positionPublisher.registerSensorStatusListener(positionListener);
-		
-		while(!positionSensorActive.get()) {
-			try {
-				this.wait(100);
-			} catch (InterruptedException e) {
-			}
-		}
-		
-		positionPublisher.unregisterSensorStatusListener(positionListener);
-		
-		while(!loadingScreenDurationMet.get()) {
-    		try {
-    			this.wait(100);
-    		} catch (InterruptedException e) {
-    		}
-		}
-		
-		updateGameState(GameStateEnum.GAME_NAVIGATION);
+		loadThread.start();
 	}
 
 	/**
