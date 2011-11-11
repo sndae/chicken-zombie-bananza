@@ -29,13 +29,23 @@ package ucf.chickenzombiebonanza.android.sensor;
 import geotransform.coords.Gcc_Coord_3d;
 import geotransform.coords.Gdc_Coord_3d;
 import geotransform.transforms.Gdc_To_Gcc_Converter;
+import android.content.Context;
 import android.location.Location;
 import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
 import ucf.chickenzombiebonanza.common.GeocentricCoordinate;
 import ucf.chickenzombiebonanza.common.sensor.PositionPublisher;
 
 public class GpsListener extends PositionPublisher implements LocationListener {
+	
+	private final LocationManager locationManager;
+	
+	public GpsListener(Context context) {
+		locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0,
+                        0, this);
+	}
 
 	@Override
 	public void onLocationChanged(Location location) {
