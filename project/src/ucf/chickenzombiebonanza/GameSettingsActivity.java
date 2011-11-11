@@ -28,15 +28,20 @@ package ucf.chickenzombiebonanza;
 
 import ucf.chickenzombiebonanza.game.GameManager;
 import ucf.chickenzombiebonanza.game.GameStateEnum;
+import ucf.chickenzombiebonanza.game.DifficultyEnum;
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 
 /**
  * 
  */
 public final class GameSettingsActivity extends AbstractGameActivity {
+	
 
 	@Override
 	public void onCreate(Bundle bundle) {
@@ -44,6 +49,48 @@ public final class GameSettingsActivity extends AbstractGameActivity {
 		setContentView(R.layout.settings);
 
 		Button backButton = (Button) findViewById(R.id.backButton);
+		Button applyButton = (Button) findViewById(R.id.buttonApply);
+		Button showPlayAreaButton = (Button) findViewById(R.id.playAreaButton);
+		EditText playAreaHeight = (EditText) findViewById(R.id.playAreaHeight);
+		EditText playAreaWidth = (EditText) findViewById(R.id.playAreaWidth);
+		
+		
+		
+		
+		 RadioGroup radioGroupDifficulty=(RadioGroup)findViewById(R.id.radioGroupDifficulty);
+		 
+		 radioGroupDifficulty.setOnCheckedChangeListener(new android.widget.RadioGroup.OnCheckedChangeListener()
+		 {
+			@Override
+			public void onCheckedChanged(RadioGroup group, int checkedId) {
+				// TODO Auto-generated method stub
+				RadioButton rE=(RadioButton)findViewById(R.id.radioEasy);
+		        RadioButton rM=(RadioButton)findViewById(R.id.radioMedium);
+		        RadioButton rH=(RadioButton)findViewById(R.id.radioHard);
+		        
+		        DifficultyEnum Difficulty = DifficultyEnum.EASY;//This probably shouldn't be here
+		        //But it wouldn't work anywhere else. 
+		        
+		        if(rE.isChecked()==true){//Easy
+		        setContentView(R.layout.main);//No idea what this does.
+		        Difficulty = DifficultyEnum.EASY;
+		        
+		        }
+		        else if(rM.isChecked()==true)//Medium
+		        {
+		        setContentView(R.layout.main);
+		        Difficulty = DifficultyEnum.MEDIUM;
+		        }
+		        else if(rH.isChecked()==true)//Hard
+		        {
+		        setContentView(R.layout.main);
+		        Difficulty = DifficultyEnum.HARD;
+		        }
+			}
+		 });
+		 
+		
+		
 		backButton.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View arg0) {
@@ -52,6 +99,9 @@ public final class GameSettingsActivity extends AbstractGameActivity {
 				finish();
 			}
 		});
+		/////////////////////////////////
+		//When Ever we get the value of the radius, get the value or set value, a call will be made
+		GameManager.getInstance().getGameSettings().getPlayAreaRadius();
 	}
 
 	@Override
