@@ -163,4 +163,9 @@ public class GameManager implements GameSettingsChangeListener {
 
 	}
 
+	@Override
+	public void onGameDifficultyChanged(DifficultyEnum difficulty) {
+		
+	}
+
 }
