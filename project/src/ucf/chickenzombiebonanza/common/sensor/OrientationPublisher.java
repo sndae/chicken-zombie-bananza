@@ -26,6 +26,6 @@
  */
 package ucf.chickenzombiebonanza.common.sensor;
 
-public class OrientationPublisher {
+public class OrientationPublisher extends Sensor {
 
 }

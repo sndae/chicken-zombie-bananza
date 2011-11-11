@@ -1,5 +1,7 @@
 package ucf.chickenzombiebonanza.android.sensor;
 
-public class GyroscopeListener {
+import ucf.chickenzombiebonanza.common.sensor.OrientationPublisher;
+
+public class GyroscopeListener extends OrientationPublisher {
 
 }

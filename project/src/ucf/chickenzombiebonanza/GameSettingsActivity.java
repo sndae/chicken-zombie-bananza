@@ -29,7 +29,6 @@ package ucf.chickenzombiebonanza;
 import ucf.chickenzombiebonanza.game.GameManager;
 import ucf.chickenzombiebonanza.game.GameStateEnum;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -38,29 +37,27 @@ import android.widget.Button;
  * 
  */
 public final class GameSettingsActivity extends AbstractGameActivity {
-    public static final String TAG = "GameSettingsActivity";
-    private Button mBackButton;
 
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-	Log.v(TAG, "Activity State: onCreate()");
-	super.onCreate(savedInstanceState);
-	setContentView(R.layout.settings);
-	
-	mBackButton = (Button) findViewById(R.id.backButton);
-	mBackButton.setOnClickListener(new OnClickListener() {
-	    @Override
-	    public void onClick(View arg0) {
-		Log.d(TAG, "mAddAccountButton clicked");
-		GameManager.getInstance().updateGameState(GameStateEnum.GAME_NAVIGATION);
-		finish();
-	    }
-	});
-    }
-    
-    @Override
-    public void onBackPressed() {
-	GameManager.getInstance().updateGameState(GameStateEnum.GAME_NAVIGATION);
-    }
+	@Override
+	public void onCreate(Bundle bundle) {
+		super.onCreate(bundle);
+		setContentView(R.layout.settings);
+
+		Button backButton = (Button) findViewById(R.id.backButton);
+		backButton.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View arg0) {
+				GameManager.getInstance().updateGameState(
+						GameStateEnum.GAME_NAVIGATION);
+				finish();
+			}
+		});
+	}
+
+	@Override
+	public void onBackPressed() {
+		GameManager.getInstance()
+				.updateGameState(GameStateEnum.GAME_NAVIGATION);
+	}
 
 }

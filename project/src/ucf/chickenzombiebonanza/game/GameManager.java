@@ -27,127 +27,179 @@
 package ucf.chickenzombiebonanza.game;
 
 import geotransform.ellipsoids.WE_Ellipsoid;
+import geotransform.transforms.Gcc_To_Gdc_Converter;
 import geotransform.transforms.Gdc_To_Gcc_Converter;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import ucf.chickenzombiebonanza.common.GeocentricCoordinate;
+import ucf.chickenzombiebonanza.common.sensor.OrientationPublisher;
 import ucf.chickenzombiebonanza.common.sensor.PositionPublisher;
+import ucf.chickenzombiebonanza.common.sensor.SensorStatusListener;
 import ucf.chickenzombiebonanza.game.entity.GameEntity;
 
 public class GameManager implements GameSettingsChangeListener {
 
-    private static GameManager instance = null;
+	private static GameManager instance = null;
 
-    private List<GameStateListener> stateListeners = new ArrayList<GameStateListener>();
+	private List<GameStateListener> stateListeners = new ArrayList<GameStateListener>();
 
-    private List<GameEntity> gameEntities = new ArrayList<GameEntity>();
+	private List<GameEntity> gameEntities = new ArrayList<GameEntity>();
 
-    private final GameSettings gameSettings = new GameSettings();
-    
-    //Temporary
-    private PositionPublisher playerPositionPublisher = null;
+	private final GameSettings gameSettings = new GameSettings();
 
-    public static GameManager getInstance() {
-	if (instance == null) {
-	    instance = new GameManager();
-	    instance.init();
-	}
-	return instance;
-    }
-
-    private GameManager() {
-	gameSettings.registerGameSettingsChangeListener(this);
-    }
-
-    private void init() {
-
-    }
-    
-    public void setPlayerPositionPublisher(PositionPublisher publisher) {
-	playerPositionPublisher = publisher;
-    }
-
-    public void start() {
-
-	updateGameState(GameStateEnum.GAME_LOADING);
-	long startTime = System.currentTimeMillis();
-	Gdc_To_Gcc_Converter.Init(new WE_Ellipsoid());
-	long endTime = System.currentTimeMillis();
-	final long timeLeft = 5000 - (endTime - startTime);
-	if (timeLeft > 0) {
-	    Timer waitTimer = new Timer();
-	    waitTimer.schedule(new TimerTask() {
-		@Override
-		public void run() {
-		    updateGameState(GameStateEnum.GAME_NAVIGATION);
-
+	public static GameManager getInstance() {
+		if (instance == null) {
+			instance = new GameManager();
+			instance.init();
 		}
-	    }, timeLeft);
-	} else {
-	    updateGameState(GameStateEnum.GAME_NAVIGATION);
+		return instance;
 	}
 
-    }
-
-    /**
-     * 
-     * @return
-     */
-    public GameSettings getGameSettings() {
-	return gameSettings;
-    }
-
-    /**
-     * 
-     * @param state
-     * @param obj
-     */
-    public void updateGameState(GameStateEnum state, Object obj) {
-	for (GameStateListener i : stateListeners) {
-	    i.gameStateChanged(state, obj);
+	private GameManager() {
+		gameSettings.registerGameSettingsChangeListener(this);
 	}
-    }
 
-    /**
-     * 
-     * @param state
-     */
-    public void updateGameState(GameStateEnum state) {
-	updateGameState(state, null);
-    }
+	private void init() {
 
-    /**
-     * Add an object to receive notifications when the game state changes
-     * 
-     * @param listener
-     *            The object to receive notifications
-     */
-    public void addStateListener(GameStateListener listener) {
-	stateListeners.add(listener);
-    }
+	}
 
-    /**
-     * Remove an object that receive notifications about the game state changes
-     * 
-     * @param listener
-     *            The object that receives notifications
-     */
-    public void removeStateListener(GameStateListener listener) {
-	stateListeners.add(listener);
-    }
+	public void start(PositionPublisher positionPublisher, OrientationPublisher orientationPublisher) {
+		updateGameState(GameStateEnum.GAME_LOADING);
 
-    @Override
-    public void onPlayAreaCenterChanged(GeocentricCoordinate position) {
+		final AtomicBoolean loadingScreenDurationMet = new AtomicBoolean(false);
+		
+		// Start a timer to make the loading screen stay up a minimum period of time
+		Timer waitTimer = new Timer();
+		waitTimer.schedule(new TimerTask() {
+			@Override
+			public void run() {
+				loadingScreenDurationMet.set(true);
+			}
+		}, 5000);
 
-    }
+		Gdc_To_Gcc_Converter.Init(new WE_Ellipsoid());
+		Gcc_To_Gdc_Converter.Init(new WE_Ellipsoid());
+		
+		final AtomicBoolean orientationSensorActive = new AtomicBoolean(false);
+		
+		SensorStatusListener orientationListener = new SensorStatusListener(){
+			@Override
+			public void onSensorActive() {
+				orientationSensorActive.set(true);
+			}
 
-    @Override
-    public void onPlayAreaRadiusChanged(float radius) {
+			@Override
+			public void onSensorInactive() {
+				//Do nothing
+			}			
+		};
+		
+		orientationPublisher.registerSensorStatusListener(orientationListener);
+		
+		while(!orientationSensorActive.get()) {
+			try {
+				this.wait(100);
+			} catch (InterruptedException e) {
+			}
+		}
+		
+		orientationPublisher.unregisterSensorStatusListener(orientationListener);
+		
+		final AtomicBoolean positionSensorActive = new AtomicBoolean(false);
+		
+		SensorStatusListener positionListener = new SensorStatusListener(){
+			@Override
+			public void onSensorActive() {
+				positionSensorActive.set(true);
+			}
 
-    }
+			@Override
+			public void onSensorInactive() {
+				//Do nothing
+			}			
+		};
+		
+		positionPublisher.registerSensorStatusListener(positionListener);
+		
+		while(!positionSensorActive.get()) {
+			try {
+				this.wait(100);
+			} catch (InterruptedException e) {
+			}
+		}
+		
+		positionPublisher.unregisterSensorStatusListener(positionListener);
+		
+		while(!loadingScreenDurationMet.get()) {
+    		try {
+    			this.wait(100);
+    		} catch (InterruptedException e) {
+    		}
+		}
+		
+		updateGameState(GameStateEnum.GAME_NAVIGATION);
+	}
+
+	/**
+	 * 
+	 * @return
+	 */
+	public GameSettings getGameSettings() {
+		return gameSettings;
+	}
+
+	/**
+	 * 
+	 * @param state
+	 * @param obj
+	 */
+	public void updateGameState(GameStateEnum state, Object obj) {
+		for (GameStateListener i : stateListeners) {
+			i.gameStateChanged(state, obj);
+		}
+	}
+
+	/**
+	 * 
+	 * @param state
+	 */
+	public void updateGameState(GameStateEnum state) {
+		updateGameState(state, null);
+	}
+
+	/**
+	 * Add an object to receive notifications when the game state changes
+	 * 
+	 * @param listener
+	 *            The object to receive notifications
+	 */
+	public void addStateListener(GameStateListener listener) {
+		stateListeners.add(listener);
+	}
+
+	/**
+	 * Remove an object that receive notifications about the game state changes
+	 * 
+	 * @param listener
+	 *            The object that receives notifications
+	 */
+	public void removeStateListener(GameStateListener listener) {
+		stateListeners.add(listener);
+	}
+
+	@Override
+	public void onPlayAreaCenterChanged(GeocentricCoordinate position) {
+
+	}
+
+	@Override
+	public void onPlayAreaRadiusChanged(float radius) {
+
+	}
 
 }
