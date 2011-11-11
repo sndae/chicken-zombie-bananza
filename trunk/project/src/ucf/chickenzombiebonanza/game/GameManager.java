@@ -90,30 +90,6 @@ public class GameManager implements GameSettingsChangeListener {
 				Gdc_To_Gcc_Converter.Init(new WE_Ellipsoid());
 				Gcc_To_Gdc_Converter.Init(new WE_Ellipsoid());
 				
-				if(!orientationPublisher.isSensorActive()) {
-					
-    				while(!orientationPublisher.isSensorActive()) {
-    					synchronized(this) {
-    		    			try {
-    		    				this.wait(100);
-    		    			} catch (InterruptedException e) {
-    		    			}
-    					}
-    				}
-				}
-				
-				if(!positionPublisher.isSensorActive()) {
-				    				
-    				while(!positionPublisher.isSensorActive()) {
-    					synchronized(this) {
-    		    			try {
-    		    				this.wait(100);
-    		    			} catch (InterruptedException e) {
-    		    			}
-    					}
-    				}
-				}
-				
 				while(!loadingScreenDurationMet.get()) {
 					synchronized(this) {
 		        		try {
