@@ -35,44 +35,59 @@ import ucf.chickenzombiebonanza.common.GeocentricCoordinate;
  * 
  */
 public class GameSettings {
-    
-    private GeocentricCoordinate playAreaCenter = null;
-    
-    // In meters
-    private float playAreaRadius = 0.0f;
-    
-    private final List<GameSettingsChangeListener> listeners = new ArrayList<GameSettingsChangeListener>();
-    
-    public GeocentricCoordinate getPlayAreaCenter() {
-	return playAreaCenter;
-    }
-    
-    public void setPlayAreaCenter(GeocentricCoordinate position) {
-	playAreaCenter = position;
-	for(GameSettingsChangeListener i : listeners) {
-	    i.onPlayAreaCenterChanged(playAreaCenter);
+
+	private GeocentricCoordinate playAreaCenter = null;
+
+	// In meters
+	private float playAreaRadius = 0.0f;
+	
+	private DifficultyEnum gameDifficulty = DifficultyEnum.MEDIUM;
+
+	private final List<GameSettingsChangeListener> listeners = new ArrayList<GameSettingsChangeListener>();
+
+	public GeocentricCoordinate getPlayAreaCenter() {
+		return playAreaCenter;
 	}
-    }
-    
-    public float getPlayAreaRadius() {
-	return playAreaRadius;
-    }
-    
-    public void setPlayAreaRadius(float radius) {
-	playAreaRadius = radius;
-	for(GameSettingsChangeListener i : listeners) {
-	    i.onPlayAreaRadiusChanged(playAreaRadius);
+
+	public void setPlayAreaCenter(GeocentricCoordinate position) {
+		playAreaCenter = position;
+		for (GameSettingsChangeListener i : listeners) {
+			i.onPlayAreaCenterChanged(playAreaCenter);
+		}
 	}
-    }
-    
-    public void registerGameSettingsChangeListener(GameSettingsChangeListener listener) {
-	if(!listeners.contains(listener)) {
-	    listeners.add(listener);
+
+	public float getPlayAreaRadius() {
+		return playAreaRadius;
 	}
-    }
-    
-    public void unregisterGameSettingsChangeListener(GameSettingsChangeListener listener) {
-	listeners.remove(listener);
-    }
+
+	public void setPlayAreaRadius(float radius) {
+		playAreaRadius = radius;
+		for (GameSettingsChangeListener i : listeners) {
+			i.onPlayAreaRadiusChanged(playAreaRadius);
+		}
+	}
+	
+	public void setGameDifficulty(DifficultyEnum difficulty) {
+		gameDifficulty = difficulty;
+		for(GameSettingsChangeListener i : listeners) {
+			i.onGameDifficultyChanged(difficulty);
+		}
+	}
+	
+	public DifficultyEnum getGameDifficulty() {
+		return gameDifficulty;
+	}
+
+	public void registerGameSettingsChangeListener(
+			GameSettingsChangeListener listener) {
+		if (!listeners.contains(listener)) {
+			listeners.add(listener);
+		}
+	}
+
+	public void unregisterGameSettingsChangeListener(
+			GameSettingsChangeListener listener) {
+		listeners.remove(listener);
+	}
 
 }

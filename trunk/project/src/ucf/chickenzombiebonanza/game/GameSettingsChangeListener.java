@@ -33,5 +33,7 @@ public interface GameSettingsChangeListener {
     public void onPlayAreaCenterChanged(GeocentricCoordinate position);
     
     public void onPlayAreaRadiusChanged(float radius);
+    
+    public void onGameDifficultyChanged(DifficultyEnum difficulty);
 
 }
