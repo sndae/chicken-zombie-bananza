@@ -4,4 +4,9 @@
     <string name="app_name">ChickenZombieBonanza</string>
     <string name="settingButton">Settings</string>
     <color name="white">#FFFFFF</color>
+    <string name="Easy">Easy</string>
+    <string name="Medium">Medium</string>
+    <string name="Hard">Hard</string>
+    <string name="PlayArea">Show play area</string>
+    <string name="Apple">Apply</string>
 </resources>
