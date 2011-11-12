@@ -29,6 +29,8 @@ package ucf.chickenzombiebonanza;
 import ucf.chickenzombiebonanza.game.GameManager;
 import ucf.chickenzombiebonanza.game.GameStateEnum;
 import ucf.chickenzombiebonanza.game.DifficultyEnum;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -40,9 +42,10 @@ import android.widget.RadioGroup;
 /**
  * 
  */
+
 public final class GameSettingsActivity extends AbstractGameActivity {
 	
-
+	DifficultyEnum Difficulty = DifficultyEnum.EASY;
 	@Override
 	public void onCreate(Bundle bundle) {
 		super.onCreate(bundle);
@@ -53,7 +56,9 @@ public final class GameSettingsActivity extends AbstractGameActivity {
 		Button showPlayAreaButton = (Button) findViewById(R.id.playAreaButton);
 		EditText playAreaHeight = (EditText) findViewById(R.id.playAreaHeight);
 		EditText playAreaWidth = (EditText) findViewById(R.id.playAreaWidth);
-		
+		final AlertDialog alertDialog;
+		alertDialog = new AlertDialog.Builder(this).create();
+		//This probably shouldn't be here
 		
 		
 		
@@ -68,22 +73,22 @@ public final class GameSettingsActivity extends AbstractGameActivity {
 		        RadioButton rM=(RadioButton)findViewById(R.id.radioMedium);
 		        RadioButton rH=(RadioButton)findViewById(R.id.radioHard);
 		        
-		        DifficultyEnum Difficulty = DifficultyEnum.EASY;//This probably shouldn't be here
+		        //DifficultyEnum Difficulty = DifficultyEnum.EASY;//This probably shouldn't be here
 		        //But it wouldn't work anywhere else. 
 		        
 		        if(rE.isChecked()==true){//Easy
-		        setContentView(R.layout.main);//No idea what this does.
+		        //setContentView(R.layout.main);//No idea what this does.
 		        Difficulty = DifficultyEnum.EASY;
 		        
 		        }
 		        else if(rM.isChecked()==true)//Medium
 		        {
-		        setContentView(R.layout.main);
+		        //setContentView(R.layout.main);
 		        Difficulty = DifficultyEnum.MEDIUM;
 		        }
 		        else if(rH.isChecked()==true)//Hard
 		        {
-		        setContentView(R.layout.main);
+		        //setContentView(R.layout.main);
 		        Difficulty = DifficultyEnum.HARD;
 		        }
 			}
@@ -99,6 +104,32 @@ public final class GameSettingsActivity extends AbstractGameActivity {
 				finish();
 			}
 		});
+		
+		applyButton.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View arg0) {
+				
+				alertDialog.setTitle("Settings saves");//THIS DOESNT SAVE ANYTHING YET!
+				alertDialog.setMessage("The Difficulty is now "+ Difficulty);
+				alertDialog.show();
+				
+				/*alertDialog.setButton("OK", new OnClickListener(){
+
+					public void onClick(DialogInterface dialog, int which) {               
+					//...
+					}
+
+					@Override
+					public void onClick(View v) {
+						// TODO Auto-generated method stub
+						
+					}
+					});*/
+				alertDialog.show();
+				
+			}
+		});
+		
 		/////////////////////////////////
 		//When Ever we get the value of the radius, get the value or set value, a call will be made
 		GameManager.getInstance().getGameSettings().getPlayAreaRadius();
@@ -108,6 +139,21 @@ public final class GameSettingsActivity extends AbstractGameActivity {
 	public void onBackPressed() {
 		GameManager.getInstance()
 				.updateGameState(GameStateEnum.GAME_NAVIGATION);
+		
+	}
+	
+	public void onApplyPress(){
+		//GameManager.getInstance()
+		//.updateGameState(GameStateEnum.GAME_NAVIGATION);
+		
+		AlertDialog alertDialog;
+		alertDialog = new AlertDialog.Builder(this).create();
+		alertDialog.setTitle("Packing List");
+		alertDialog.setMessage("Could not find the file.");
+		alertDialog.show();
+		
+		
+	
 	}
 
 }
