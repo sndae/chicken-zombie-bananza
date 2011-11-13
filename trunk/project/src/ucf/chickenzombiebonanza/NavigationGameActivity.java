@@ -76,7 +76,7 @@ public class NavigationGameActivity extends AbstractGameMapActivity {
 						GameStateEnum.GAME_SETTINGS);
 				return true;
 			case R.id.launchshootinggame:
-				// Do nothing, yet
+				GameManager.getInstance().updateGameState(GameStateEnum.GAME_SHOOTING);
 				return true;
 			default:
 				return super.onOptionsItemSelected(item);
