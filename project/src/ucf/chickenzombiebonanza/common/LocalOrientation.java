@@ -46,4 +46,27 @@ public class LocalOrientation {
 	public double getRoll() {
 		return roll;
 	}
+	
+	public float[] toMatrix() {
+	    float[] matrix = new float[9];
+	    
+	    float sinX = (float)Math.sin(pitch);
+	    float cosX = (float)Math.cos(pitch);
+	    float sinY = (float)Math.sin(azimuth);
+	    float cosY = (float)Math.cos(azimuth);
+	    float sinZ = (float)Math.sin(roll);
+	    float cosZ = (float)Math.cos(roll);
+	    
+	    matrix[0] = cosY*cosZ;
+	    matrix[1] = cosZ*sinX*sinY-cosX*sinZ;
+	    matrix[2] = cosX*cosZ*sinY+sinX*sinZ;
+	    matrix[3] = cosY*sinZ;
+	    matrix[4] = cosX*cosZ+sinX*sinY*sinZ;
+	    matrix[5] = -cosZ*sinX+cosX*sinY*sinZ;
+	    matrix[6] = -sinY;
+	    matrix[7] = cosY*sinX;
+	    matrix[8] = cosX*cosY;
+	    
+	    return matrix;
+	}
 }

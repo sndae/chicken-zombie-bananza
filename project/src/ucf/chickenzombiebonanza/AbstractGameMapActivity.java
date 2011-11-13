@@ -36,23 +36,22 @@ import com.google.android.maps.MapActivity;
 /**
  * 
  */
-public abstract class AbstractGameMapActivity extends MapActivity implements
-		GameStateListener {
+public abstract class AbstractGameMapActivity extends MapActivity implements GameStateListener {
 
-	@Override
-	public void onCreate(Bundle bundle) {
-		super.onCreate(bundle);
-		AbstractGameActivity.onCreateStatic(this);
-	}
+    @Override
+    public void onCreate(Bundle bundle) {
+        super.onCreate(bundle);
+        AbstractGameActivity.onCreateStatic(this);
+    }
 
-	@Override
-	public void onStop() {
-		super.onStop();
-		AbstractGameActivity.onStopStatic(this);
-	}
+    @Override
+    public void onStop() {
+        super.onStop();
+        AbstractGameActivity.onStopStatic(this);
+    }
 
-	@Override
-	public void gameStateChanged(GameStateEnum state, Object obj) {
-		AbstractGameActivity.gameStateChangedStatic(this, state, obj);
-	}
+    @Override
+    public void gameStateChanged(GameStateEnum state, Object obj) {
+        AbstractGameActivity.gameStateChangedStatic(this, state, obj);
+    }
 }
