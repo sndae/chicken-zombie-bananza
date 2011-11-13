@@ -32,11 +32,10 @@ import ucf.chickenzombiebonanza.game.GameStateEnum;
 import com.google.android.maps.MapController;
 import com.google.android.maps.MapView;
 
-import android.location.LocationManager;
 import android.os.Bundle;
-import android.view.View;
-import android.view.View.OnClickListener;
-import android.widget.Button;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 
 /**
  * 
@@ -46,7 +45,6 @@ public class NavigationGameActivity extends AbstractGameMapActivity {
 
 	private MapController mapController;
 	private MapView mapView;
-	private LocationManager locationManager;
 
 	@Override
 	public void onCreate(Bundle bundle) {
@@ -60,15 +58,29 @@ public class NavigationGameActivity extends AbstractGameMapActivity {
 
 		mapController = mapView.getController();
 		mapController.setZoom(14); // Zoom 1 is world view
+	}
+	
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+	    MenuInflater inflater = getMenuInflater();
+	    inflater.inflate(R.menu.navigation_menu, menu);
+	    return true;
+	}
 
-		Button settingsButton = (Button) findViewById(R.id.settingsButton);
-		settingsButton.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View arg0) {
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		// Handle item selection
+		switch (item.getItemId()) {
+			case R.id.settingsoption:
 				GameManager.getInstance().updateGameState(
 						GameStateEnum.GAME_SETTINGS);
-			}
-		});
+				return true;
+			case R.id.launchshootinggame:
+				// Do nothing, yet
+				return true;
+			default:
+				return super.onOptionsItemSelected(item);
+		}
 	}
 
 	@Override
