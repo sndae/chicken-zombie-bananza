@@ -9,4 +9,6 @@
     <string name="Hard">Hard</string>
     <string name="PlayArea">Show play area</string>
     <string name="Apple">Apply</string>
+    <string name="settingsText">Settings</string>
+    <string name="shootingGameText">Shooting Game</string>
 </resources>
