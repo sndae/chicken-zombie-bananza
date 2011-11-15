@@ -8,7 +8,7 @@ public class PowerUpEntity extends GameEntity {
 	private double activationDistance;
 	
 	public PowerUpEntity(double activationDistance, GeocentricCoordinate position, LocalOrientation orientation) {
-		super(position,orientation);
+		super(position,orientation, GameEntityTagEnum.POWER_UP);
 		this.activationDistance = activationDistance;
 	}
 

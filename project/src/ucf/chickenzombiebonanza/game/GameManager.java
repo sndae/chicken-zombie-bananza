@@ -36,21 +36,26 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import android.util.Log;
-
 import ucf.chickenzombiebonanza.common.GeocentricCoordinate;
 import ucf.chickenzombiebonanza.common.sensor.OrientationPublisher;
 import ucf.chickenzombiebonanza.common.sensor.PositionPublisher;
-import ucf.chickenzombiebonanza.common.sensor.SensorStatusListener;
 import ucf.chickenzombiebonanza.game.entity.GameEntity;
+import ucf.chickenzombiebonanza.game.entity.GameEntityListener;
+import ucf.chickenzombiebonanza.game.entity.GameEntityStateListener;
+import ucf.chickenzombiebonanza.game.entity.GameEntityTagEnum;
 
+/**
+ * 
+ */
 public class GameManager implements GameSettingsChangeListener {
 
 	private static GameManager instance = null;
 
-	private List<GameStateListener> stateListeners = new ArrayList<GameStateListener>();
+	private final List<GameStateListener> stateListeners = new ArrayList<GameStateListener>();
 
-	private List<GameEntity> gameEntities = new ArrayList<GameEntity>();
+	private final List<GameEntity> gameEntities = new ArrayList<GameEntity>();
+
+	private final List<GameEntityListenerData> gameEntityListeners = new ArrayList<GameEntityListenerData>();
 
 	private final GameSettings gameSettings = new GameSettings();
 
@@ -70,12 +75,14 @@ public class GameManager implements GameSettingsChangeListener {
 
 	}
 
-	public void start(final PositionPublisher positionPublisher, final OrientationPublisher orientationPublisher) {
+	public void start(final PositionPublisher positionPublisher,
+			final OrientationPublisher orientationPublisher) {
 		updateGameState(GameStateEnum.GAME_LOADING);
 
 		final AtomicBoolean loadingScreenDurationMet = new AtomicBoolean(false);
-		
-		// Start a timer to make the loading screen stay up a minimum period of time
+
+		// Start a timer to make the loading screen stay up a minimum period of
+		// time
 		Timer waitTimer = new Timer();
 		waitTimer.schedule(new TimerTask() {
 			@Override
@@ -83,26 +90,26 @@ public class GameManager implements GameSettingsChangeListener {
 				loadingScreenDurationMet.set(true);
 			}
 		}, 5000);
-		
+
 		Thread loadThread = new Thread() {
 			@Override
 			public void run() {
 				Gdc_To_Gcc_Converter.Init(new WE_Ellipsoid());
 				Gcc_To_Gdc_Converter.Init(new WE_Ellipsoid());
-				
-				while(!loadingScreenDurationMet.get()) {
-					synchronized(this) {
-		        		try {
-		        			this.wait(100);
-		        		} catch (InterruptedException e) {
-		        		}
+
+				while (!loadingScreenDurationMet.get()) {
+					synchronized (this) {
+						try {
+							this.wait(100);
+						} catch (InterruptedException e) {
+						}
 					}
 				}
-				
+
 				updateGameState(GameStateEnum.GAME_NAVIGATION);
 			}
 		};
-		
+
 		loadThread.start();
 	}
 
@@ -133,6 +140,36 @@ public class GameManager implements GameSettingsChangeListener {
 		updateGameState(state, null);
 	}
 
+	public void addGameEntity(final GameEntity entity) {
+		gameEntities.add(entity);
+		entity.registerGameEntityStateListener(new GameEntityStateListener() {
+			@Override
+			public void onGameEntityDestroyed(GameEntity listener) {
+				GameManager.this.removeGameEntity(entity);
+			}
+		});
+
+		for (GameEntityListenerData i : gameEntityListeners) {
+			if (i.filterTags == null
+					|| GameManager.sharesTag(i.filterTags, entity.getTags())) {
+				i.listener.onGameEntityAdded(entity);
+			}
+		}
+	}
+
+	public void removeGameEntity(GameEntity entity) {
+		if (gameEntities.contains(entity)) {
+			gameEntities.remove(entity);
+			for (GameEntityListenerData i : gameEntityListeners) {
+				if (i.filterTags == null
+						|| GameManager
+								.sharesTag(i.filterTags, entity.getTags())) {
+					i.listener.onGameEntityDeleted(entity);
+				}
+			}
+		}
+	}
+
 	/**
 	 * Add an object to receive notifications when the game state changes
 	 * 
@@ -153,6 +190,27 @@ public class GameManager implements GameSettingsChangeListener {
 		stateListeners.add(listener);
 	}
 
+	public void registerGameEntityListener(GameEntityListener listener) {
+		gameEntityListeners.add(new GameEntityListenerData(listener));
+	}
+
+	public void registerGameEntityListener(GameEntityListener listener,
+			List<GameEntityTagEnum> filter) {
+		gameEntityListeners.add(new GameEntityListenerData(listener, filter));
+	}
+
+	public void unregisterGameEntityListener(GameEntityListener listener) {
+		List<GameEntityListenerData> toRemove = new ArrayList<GameEntityListenerData>();
+		for (GameEntityListenerData i : gameEntityListeners) {
+			if (i.listener == listener) {
+				toRemove.add(i);
+			}
+		}
+		for (GameEntityListenerData i : toRemove) {
+			gameEntityListeners.remove(i);
+		}
+	}
+
 	@Override
 	public void onPlayAreaCenterChanged(GeocentricCoordinate position) {
 
@@ -165,7 +223,36 @@ public class GameManager implements GameSettingsChangeListener {
 
 	@Override
 	public void onGameDifficultyChanged(DifficultyEnum difficulty) {
-		
+
 	}
 
+	private class GameEntityListenerData {
+		public final GameEntityListener listener;
+		public final List<GameEntityTagEnum> filterTags;
+
+		public GameEntityListenerData(GameEntityListener listener) {
+			this.listener = listener;
+			this.filterTags = null;
+		}
+
+		public GameEntityListenerData(GameEntityListener listener,
+				List<GameEntityTagEnum> filterTags) {
+			this.listener = listener;
+			this.filterTags = filterTags;
+		}
+	}
+
+	public static boolean sharesTag(List<GameEntityTagEnum> list1,
+			List<GameEntityTagEnum> list2) {
+		if (list1 != null && list2 != null) {
+			for (GameEntityTagEnum i : list1) {
+				for (GameEntityTagEnum j : list2) {
+					if (i == j) {
+						return true;
+					}
+				}
+			}
+		}
+		return false;
+	}
 }

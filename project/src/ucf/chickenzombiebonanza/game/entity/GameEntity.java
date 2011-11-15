@@ -26,6 +26,9 @@
  */
 package ucf.chickenzombiebonanza.game.entity;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import ucf.chickenzombiebonanza.common.GeocentricCoordinate;
 import ucf.chickenzombiebonanza.common.LocalOrientation;
 import ucf.chickenzombiebonanza.common.sensor.OrientationListener;
@@ -44,10 +47,15 @@ public abstract class GameEntity implements PositionListener, OrientationListene
 	
 	private final PositionPublisher positionPublisher = new PositionPublisher();
 	
-	public GameEntity(GeocentricCoordinate position, LocalOrientation orientation) {
+	private final List<GameEntityTagEnum> tags = new ArrayList<GameEntityTagEnum>(1);
+	
+	private final List<GameEntityStateListener> stateListeners = new ArrayList<GameEntityStateListener>();
+	
+	public GameEntity(GeocentricCoordinate position, LocalOrientation orientation, GameEntityTagEnum tag) {
 		this.id = nextAvailableId;
 		this.position = position;
 		this.orientation = orientation;
+		this.tags.add(tag);
 		
 		nextAvailableId += 1;
 	}
@@ -68,6 +76,10 @@ public abstract class GameEntity implements PositionListener, OrientationListene
 		return positionPublisher;
 	}
 	
+	public List<GameEntityTagEnum> getTags() {
+		return tags;
+	}
+	
 	public final void receivePositionUpdate(GeocentricCoordinate coordinate) {
 		this.position = coordinate;
 		positionPublisher.updatePosition(this.position);
@@ -77,8 +89,20 @@ public abstract class GameEntity implements PositionListener, OrientationListene
 		this.orientation = orientation;
 	}
 	
-	abstract public void destroyEntity();
+	public void destroyEntity() {
+		
+	}
 	
 	abstract public void interactWith(GameEntity entity);
+	
+	public final void registerGameEntityStateListener(GameEntityStateListener listener) {
+		if(!stateListeners.contains(listener)) {
+			stateListeners.add(listener);
+		}
+	}
+	
+	public final void unregisterGameEntityStateListener(GameEntityStateListener listener) {
+		stateListeners.remove(listener);
+	}
 
 }

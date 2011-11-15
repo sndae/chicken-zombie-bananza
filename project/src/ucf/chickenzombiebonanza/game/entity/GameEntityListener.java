@@ -26,38 +26,21 @@
  */
 package ucf.chickenzombiebonanza.game.entity;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import ucf.chickenzombiebonanza.common.GeocentricCoordinate;
-import ucf.chickenzombiebonanza.common.LocalOrientation;
-
-public class WaypointEntity extends GameEntity {
+/**
+ * 
+ */
+public interface GameEntityListener {
 	
-	private double activationDistance;
+	/**
+	 * 
+	 * @param entity
+	 */
+	public void onGameEntityAdded(GameEntity entity);
 	
-	private final List<WaypointActivationListener> activationListeners = new ArrayList<WaypointActivationListener>(1);
-	
-	public WaypointEntity(double activationDistance, GeocentricCoordinate position, LocalOrientation orientation) {
-		super(position, orientation, GameEntityTagEnum.WAYPOINT);
-		this.activationDistance = activationDistance;
-	}
+	/**
+	 * 
+	 * @param entity
+	 */
+	public void onGameEntityDeleted(GameEntity entity);
 
-	@Override
-	public void destroyEntity() {
-		activationListeners.clear();
-	}
-
-	@Override
-	public void interactWith(GameEntity entity) {
-		if (entity.getPosition().distanceFrom(getPosition()) < activationDistance) {
-			for (WaypointActivationListener i : activationListeners) {
-				i.waypointActivated(entity);
-			}
-		}
-	}
-	
-	public void addActivationListener(WaypointActivationListener listener) {
-		activationListeners.add(listener);
-	}
 }
