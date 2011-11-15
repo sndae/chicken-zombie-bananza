@@ -6,14 +6,10 @@ import ucf.chickenzombiebonanza.game.item.HasInventory;
 import ucf.chickenzombiebonanza.game.item.InventoryObject;
 
 /**
- * 
- */
-
-/**
  * @author Jolene
  *
  */
-public class LifeformEntity extends GameEntity implements HasInventory{
+public class LifeformEntity extends GameEntity implements HasInventory {
 	
 	private int health;
 	
@@ -24,12 +20,19 @@ public class LifeformEntity extends GameEntity implements HasInventory{
 	 * 3. injured
 	 * 4. dead
 	*/
-	private int status;
+	private LifeformEntityStateEnum state;
 	
-	public LifeformEntity(int health, int status, GeocentricCoordinate position, LocalOrientation orientation){
-		super(position, orientation);
+	public LifeformEntity(GeocentricCoordinate position, LocalOrientation orientation) {
+		super(position, orientation, GameEntityTagEnum.LIFEFORM);
+		this.health = 100;
+		this.state = LifeformEntityStateEnum.ALIVE;
+		
+	}
+	
+	public LifeformEntity(int health, LifeformEntityStateEnum status, GeocentricCoordinate position, LocalOrientation orientation){
+		super(position, orientation, GameEntityTagEnum.LIFEFORM);
 		this.health = health;
-		this.status = status;
+		this.state = status;
 		
 	}
 	
@@ -39,16 +42,16 @@ public class LifeformEntity extends GameEntity implements HasInventory{
 		return health;
 	}
 	
-	int getStatus(){
-		return status;
+	LifeformEntityStateEnum getStatus(){
+		return state;
 	}
 	
 	void setHealth(int newhealth){
 		this.health = newhealth;
 	}
 	
-	void setStatus(int newstatus){
-		this.status = newstatus;
+	void setStatus(LifeformEntityStateEnum newstatus){
+		this.state = newstatus;
 	}
 
 	/* (non-Javadoc)
