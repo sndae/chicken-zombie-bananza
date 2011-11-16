@@ -8,6 +8,7 @@
     <string name="Medium">Medium</string>
     <string name="Hard">Hard</string>
     <string name="PlayArea">Show play area</string>
+    <string name="overlay_label">Enemy Overlay Button</string>
     <string name="Apple">Apply</string>
     <string name="settingsText">Settings</string>
     <string name="shootingGameText">Shooting Game</string>
