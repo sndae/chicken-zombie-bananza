@@ -6,22 +6,40 @@ import java.util.List;
 public abstract class Sensor {
 	private final List<SensorStatusListener> listeners = new ArrayList<SensorStatusListener>();
 	
-	private boolean sensorIsActive = false;
+	private SensorStateEnum sensorState = SensorStateEnum.INACTIVE;
+	
+	public abstract void onPause();
+	
+	public abstract void onResume();
 	
 	public boolean isSensorActive() {
-		return sensorIsActive;
+		return sensorState == SensorStateEnum.ACTIVE;
 	}
 	
-	protected void setSensorState(boolean isActive) {
-		boolean beforeState = sensorIsActive;
-		sensorIsActive = isActive;
-		if(sensorIsActive && beforeState == false) {
+	public void pauseSensor() {
+	    setSensorState(SensorStateEnum.PAUSED);
+	}
+	
+	public void resumeSensor() {
+	    setSensorState(SensorStateEnum.INACTIVE);
+	}
+	
+	public SensorStateEnum getSensorState() {
+	    return sensorState;
+	}
+	
+	protected void setSensorState(SensorStateEnum state) {
+	    SensorStateEnum beforeState = sensorState;
+	    sensorState = state;
+		if(beforeState != sensorState) {
+		    if(SensorStateEnum.PAUSED == sensorState) {
+		        onPause();
+		    } else if(SensorStateEnum.PAUSED == beforeState) {
+		        onResume();
+		    }
+		    
 			for(SensorStatusListener i : listeners) {
-				i.onSensorActive();
-			}
-		} else if(!sensorIsActive && beforeState == true) {
-			for(SensorStatusListener i : listeners) {
-				i.onSensorInactive();
+				i.onSensorStatusChange(sensorState);
 			}
 		}
 	}

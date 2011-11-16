@@ -32,6 +32,7 @@ import ucf.chickenzombiebonanza.game.GameStateEnum;
 import android.content.Context;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
+import android.os.PowerManager;
 
 /**
  * 
@@ -40,24 +41,46 @@ public class ShootingGameActivity extends AbstractGameActivity {
 	
 	private GLSurfaceView glView;
 	
+	private ShootingGameGLES20Renderer renderer = new ShootingGameGLES20Renderer();
+	
+	private PowerManager.WakeLock wl;
+	
 	@Override
 	public void onCreate(Bundle bundle) {
 		super.onCreate(bundle);
+
+        renderer = new ShootingGameGLES20Renderer();
+        glView = new ShootingGameSurfaceView(this);
+        setContentView(glView);
+
+		GameManager.getInstance().getPlayerOrientationPublisher().registerForOrientationUpdates(renderer);
 		
-		glView = new ShootingGameSurfaceView(this);
-		setContentView(glView);		
+		PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        wl = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK, "DoNotDimScreen");
 	}
 	
 	@Override
 	protected void onPause() {
 		super.onPause();
 		glView.onPause();
+		GameManager.getInstance().getPlayerOrientationPublisher().pauseSensor();
+		wl.release();
 	}
 	
 	@Override
 	protected void onResume() {
 		super.onResume();
 		glView.onResume();
+		GameManager.getInstance().getPlayerOrientationPublisher().resumeSensor();
+		wl.acquire();
+	}
+	
+	@Override
+	protected void onDestroy() {
+	    super.onDestroy();
+	    
+	    GameManager.getInstance().getPlayerOrientationPublisher().unregisterForOrientationUpdates(renderer);
+	    
 	}
 	
 	@Override
@@ -71,8 +94,7 @@ public class ShootingGameActivity extends AbstractGameActivity {
 			super(context);
 			
 			setEGLContextClientVersion(2);
-			setRenderer(new ShootingGameGLES20Renderer());
+			setRenderer(ShootingGameActivity.this.renderer);
 		}
 	}
-
 }
