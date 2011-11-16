@@ -58,6 +58,8 @@ public class GameManager implements GameSettingsChangeListener {
 	private final List<GameEntityListenerData> gameEntityListeners = new ArrayList<GameEntityListenerData>();
 
 	private final GameSettings gameSettings = new GameSettings();
+	
+	private OrientationPublisher playerOrientation;
 
 	public static GameManager getInstance() {
 		if (instance == null) {
@@ -78,6 +80,8 @@ public class GameManager implements GameSettingsChangeListener {
 	public void start(final PositionPublisher positionPublisher,
 			final OrientationPublisher orientationPublisher) {
 		updateGameState(GameStateEnum.GAME_LOADING);
+		
+		playerOrientation = orientationPublisher;
 
 		final AtomicBoolean loadingScreenDurationMet = new AtomicBoolean(false);
 
@@ -111,6 +115,10 @@ public class GameManager implements GameSettingsChangeListener {
 		};
 
 		loadThread.start();
+	}
+	
+	public OrientationPublisher getPlayerOrientationPublisher() {
+	    return playerOrientation;
 	}
 
 	/**

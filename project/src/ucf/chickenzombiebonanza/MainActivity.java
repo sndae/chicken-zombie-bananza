@@ -31,25 +31,29 @@ import ucf.chickenzombiebonanza.android.sensor.GyroscopeListener;
 import ucf.chickenzombiebonanza.game.GameManager;
 import android.os.Bundle;
 
+/**
+ * 
+ */
 public class MainActivity extends AbstractGameActivity {
 
-	@Override
-	public void onCreate(Bundle bundle) {
-		super.onCreate(bundle);
-		setContentView(R.layout.loading);
+    @Override
+    public void onCreate(Bundle bundle) {
+        super.onCreate(bundle);
+        setContentView(R.layout.loading);
 
-		GameManager.getInstance().start(new GpsListener(this),
-				new GyroscopeListener());
-	}
+        GyroscopeListener gyroscopeSensor = new GyroscopeListener(this);
 
-	@Override
-	public void onStop() {
-		super.onStop();
-		finish();
-	}
+        GameManager.getInstance().start(new GpsListener(this), gyroscopeSensor);
+    }
 
-	@Override
-	public void onBackPressed() {
-		return;
-	}
+    @Override
+    public void onStop() {
+        super.onStop();
+        finish();
+    }
+
+    @Override
+    public void onBackPressed() {
+        return;
+    }
 }

@@ -26,6 +26,65 @@
  */
 package ucf.chickenzombiebonanza.common.sensor;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import ucf.chickenzombiebonanza.common.LocalOrientation;
+
+/**
+ * 
+ */
 public class OrientationPublisher extends Sensor {
+    
+    private LocalOrientation currentOrientation = new LocalOrientation();
+    
+    private List<OrientationListener> orientationListeners = new ArrayList<OrientationListener>();
+    
+    public OrientationPublisher() {
+        super();
+    }
+    
+    public void updateOrientation(LocalOrientation orientation) {
+        updateOrientation(orientation, true);
+    }
+    
+    public void updateOrientation(LocalOrientation orientation, boolean broadcast) {
+        if (getSensorState() != SensorStateEnum.PAUSED) {
+            currentOrientation = orientation;
+            this.setSensorState(SensorStateEnum.ACTIVE);
+            if (broadcast) {
+                broadcastOrientation();
+            }
+        }
+    }
+    
+    protected void broadcastOrientation() {
+        if(isSensorActive()) {
+            for(OrientationListener i : orientationListeners) {
+                i.receiveOrientationUpdate(currentOrientation);
+            }
+        }
+    }
+    
+    public LocalOrientation getCurrentOrientation() {
+        return currentOrientation;
+    }
+    
+    public void registerForOrientationUpdates(OrientationListener listener) {
+        orientationListeners.add(listener);
+    }
+    
+    public void unregisterForOrientationUpdates(OrientationListener listener) {
+        orientationListeners.remove(listener);
+    }
+
+    @Override
+    public void onPause() {
+        
+    }
+
+    @Override
+    public void onResume() {        
+    }
 
 }

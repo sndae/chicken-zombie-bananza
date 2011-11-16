@@ -42,7 +42,7 @@ public class PositionPublisher extends Sensor {
 	}
 	
 	public void updatePosition(GeocentricCoordinate coordinate) {
-		this.setSensorState(true);
+		this.setSensorState(SensorStateEnum.ACTIVE);
 		currentPosition = coordinate;
 		for(PositionListener i : positionListeners) {
 			i.receivePositionUpdate(currentPosition);
@@ -60,5 +60,13 @@ public class PositionPublisher extends Sensor {
 	public void unregisterForPositionUpdates(PositionListener listener) {
 		positionListeners.remove(listener);
 	}
+
+    @Override
+    public void onPause() {        
+    }
+
+    @Override
+    public void onResume() {
+    }
 
 }

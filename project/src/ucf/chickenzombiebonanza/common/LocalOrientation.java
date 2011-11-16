@@ -27,46 +27,33 @@
 package ucf.chickenzombiebonanza.common;
 
 public class LocalOrientation {
-	private double azimuth, pitch, roll;
+	private Vector3d u, v, w;
 	
-	public LocalOrientation(double azimuth, double pitch, double roll) {
-		this.azimuth = azimuth;
-		this.pitch = pitch;
-		this.roll = roll;
+	public LocalOrientation() {
+        this.u = new Vector3d();
+        this.v = new Vector3d();
+        this.w = new Vector3d();
 	}
 	
-	public double getAzimuth() {
-		return azimuth;
+	public LocalOrientation(Vector3d right, Vector3d up, Vector3d lookAt) {
+		this.u = right;
+		this.v = up;
+		this.w = lookAt;
 	}
 	
-	public double getPitch() {
-		return pitch;
+	public Vector3d getRight() {
+		return u;
 	}
 	
-	public double getRoll() {
-		return roll;
+	public Vector3d getUp() {
+		return v;
 	}
 	
-	public float[] toMatrix() {
-	    float[] matrix = new float[9];
-	    
-	    float sinX = (float)Math.sin(pitch);
-	    float cosX = (float)Math.cos(pitch);
-	    float sinY = (float)Math.sin(azimuth);
-	    float cosY = (float)Math.cos(azimuth);
-	    float sinZ = (float)Math.sin(roll);
-	    float cosZ = (float)Math.cos(roll);
-	    
-	    matrix[0] = cosY*cosZ;
-	    matrix[1] = cosZ*sinX*sinY-cosX*sinZ;
-	    matrix[2] = cosX*cosZ*sinY+sinX*sinZ;
-	    matrix[3] = cosY*sinZ;
-	    matrix[4] = cosX*cosZ+sinX*sinY*sinZ;
-	    matrix[5] = -cosZ*sinX+cosX*sinY*sinZ;
-	    matrix[6] = -sinY;
-	    matrix[7] = cosY*sinX;
-	    matrix[8] = cosX*cosY;
-	    
-	    return matrix;
+	public Vector3d getLookAt() {
+		return w;
+	}
+	
+	public String toString() {
+	    return "LocalOrientation[Right:" + getRight() + ", Up:" + getUp() + ", LookAt:" + getLookAt() + "]";
 	}
 }
