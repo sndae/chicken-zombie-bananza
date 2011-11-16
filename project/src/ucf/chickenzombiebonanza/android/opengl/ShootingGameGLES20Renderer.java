@@ -103,6 +103,14 @@ public class ShootingGameGLES20Renderer implements GLSurfaceView.Renderer, Orien
         GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 3);
 
     }
+    
+    public static void gluPerspective(float[] matrix, float fovy, float aspect, float zNear, float zFar) {
+        float top = zNear * (float) Math.tan(fovy * (Math.PI / 360.0));
+        float bottom = -top;
+        float left = bottom * aspect;
+        float right = top * aspect;
+        Matrix.frustumM(matrix, 0, left, right, bottom, top, zNear, zFar); 
+    }
 
 	@Override
 	public void onSurfaceChanged(GL10 unused, int width, int height) {
@@ -110,9 +118,7 @@ public class ShootingGameGLES20Renderer implements GLSurfaceView.Renderer, Orien
 		
 		float ratio = (float) width / height;
         
-        // this projection matrix is applied to object coodinates
-        // in the onDrawFrame() method
-        Matrix.frustumM(mProjMatrix, 0, -ratio, ratio, -1f, 1f, 0.1f, 10f);
+		gluPerspective(mProjMatrix, 45.0f, ratio, 0.01f, 10.0f);
 	}
 	
     private int loadShader(int type, String shaderCode) {
@@ -150,9 +156,9 @@ public class ShootingGameGLES20Renderer implements GLSurfaceView.Renderer, Orien
         frontTriangleCB.position(0);
 
         float upTriangleCoords[] = { 
-            -0.5f, 3.0f, -0.25f, 
-             0.5f, 3.0f, -0.25f, 
-             0.0f, 3.0f,  0.559016994f};
+            -0.5f, -3.0f, -0.25f, 
+             0.5f, -3.0f, -0.25f, 
+             0.0f, -3.0f,  0.559016994f};
 
         vbb = ByteBuffer.allocateDirect(upTriangleCoords.length * 4);
         vbb.order(ByteOrder.nativeOrder());
