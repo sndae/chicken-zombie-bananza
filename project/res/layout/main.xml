@@ -12,5 +12,12 @@
 	   android:apiKey="0k1QEo43QU-FGvRxRcqACboh9hqLuYnbfK2uYPg"
 	android:layout_height="wrap_content" android:layout_weight="1.00"/>
 	<LinearLayout android:layout_height="wrap_content" android:layout_width="match_parent" android:id="@+id/linearLayout1">
+	<Button android:id="@+id/doOverlay"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="30px"
+            android:layout_weight="1.0" 
+            android:textSize="12sp"   
+            android:text="@string/overlay_label" />
 	</LinearLayout>
 </LinearLayout>

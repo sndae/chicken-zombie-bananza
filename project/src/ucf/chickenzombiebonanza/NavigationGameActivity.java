@@ -26,16 +26,25 @@
  */
 package ucf.chickenzombiebonanza;
 
+import java.util.List;
+
 import ucf.chickenzombiebonanza.game.GameManager;
 import ucf.chickenzombiebonanza.game.GameStateEnum;
 
+import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapController;
 import com.google.android.maps.MapView;
+import com.google.android.maps.Overlay;
+import com.google.android.maps.OverlayItem;
 
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
 
 /**
  * 
@@ -45,6 +54,19 @@ public class NavigationGameActivity extends AbstractGameMapActivity {
 
 	private MapController mapController;
 	private MapView mapView;
+	
+	private static double lat;
+    private static double lon;
+	private List<Overlay> mapOverlays;
+    private Drawable drawable1;
+    private MyItemizedOverlay itemizedOverlay1;
+    private boolean enemyIsDisplayed = false;
+    private int latE6;
+    private int lonE6;
+    private MapController mapControl;
+    private GeoPoint gp;
+    private Button overlayButton;
+    
 
 	@Override
 	public void onCreate(Bundle bundle) {
@@ -58,8 +80,55 @@ public class NavigationGameActivity extends AbstractGameMapActivity {
 
 		mapController = mapView.getController();
 		mapController.setZoom(14); // Zoom 1 is world view
+		
+		 // Convert lat/long in degrees into integers in microdegrees
+        latE6 =  (int) (lat*1e6);
+        lonE6 = (int) (lon*1e6);
+        
+        gp = new GeoPoint(latE6, lonE6);
+        //mapControl.animateTo(gp);  
+        
+       
+        
+        
+
+     // Button to control enemy overlay
+        overlayButton = (Button)findViewById(R.id.doOverlay);
+        overlayButton.setOnClickListener(new OnClickListener(){      
+            public void onClick(View v) {	
+            	setOverlay1();
+            }
+            public void setOverlay1(){	
+                int enemyLength = enemy.length;
+                // Create itemizedOverlay2 if it doesn't exist and display all three items
+                if(! enemyIsDisplayed){
+                mapOverlays = mapView.getOverlays();	
+                //drawable1 = this.getClass().getResources().getDrawable(R.drawable.chickendrawing); 
+                itemizedOverlay1 = new MyItemizedOverlay(drawable1); 
+                // Display all three items at once
+                for(int i=0; i<3; i++){
+                   // itemizedOverlay1.addOverlayenemy[i]);
+                }
+                mapOverlays.add(itemizedOverlay1);
+                //enemyIsDisplayed = !enemyIsDisplayed;
+                // Remove each item successively with button clicks
+                } else {			
+                    itemizedOverlay1.removeItem(itemizedOverlay1.size()-1);
+                    if((itemizedOverlay1.size() < 1))  enemyIsDisplayed = false;
+                }    
+                // Added symbols will be displayed when map is redrawn so force redraw now
+                mapView.postInvalidate(); 
+            }
+        });
+
+			
 	}
-	
+	//array list to store enemy positions static storage
+		private OverlayItem [] enemy = {
+	            new OverlayItem( new GeoPoint(35952967,-83929158), "enemy 1", "zombie chicken 1"), 
+	            new OverlayItem( new GeoPoint(35953000,-83928000), "enemy 2", "zombie chicken 2"),
+	            new OverlayItem( new GeoPoint(35955000,-83929158), "enemy 3", "zombie chicken 3") 
+	        };
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 	    MenuInflater inflater = getMenuInflater();
