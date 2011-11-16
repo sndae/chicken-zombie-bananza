@@ -34,6 +34,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.util.Log;
 import ucf.chickenzombiebonanza.common.LocalOrientation;
 import ucf.chickenzombiebonanza.common.Vector3d;
 import ucf.chickenzombiebonanza.common.sensor.OrientationPublisher;
@@ -97,7 +98,12 @@ public class GyroscopeListener extends OrientationPublisher implements SensorEve
         if ((type == Sensor.TYPE_MAGNETIC_FIELD) || (type == Sensor.TYPE_ACCELEROMETER)) {
             rotationMatrix = new float[16];
             SensorManager.getRotationMatrix(rotationMatrix, null, gravity, geomag);
-            SensorManager.remapCoordinateSystem(rotationMatrix, SensorManager.AXIS_X, SensorManager.AXIS_Z, rotationMatrix);
+            Log.d("Rotation", "Rotation Matrix");
+            Log.d("Rotation", rotationMatrix[0] + " " + rotationMatrix[4] + " " + rotationMatrix[8] + " " + rotationMatrix[12] );
+            Log.d("Rotation", rotationMatrix[1] + " " + rotationMatrix[5] + " " + rotationMatrix[9] + " " + rotationMatrix[13] );
+            Log.d("Rotation", rotationMatrix[2] + " " + rotationMatrix[6] + " " + rotationMatrix[10] + " " + rotationMatrix[14] );
+            Log.d("Rotation", rotationMatrix[3] + " " + rotationMatrix[7] + " " + rotationMatrix[11] + " " + rotationMatrix[15] );
+            SensorManager.remapCoordinateSystem(rotationMatrix, SensorManager.AXIS_Y, SensorManager.AXIS_Y, rotationMatrix);
             LocalOrientation orientation = new LocalOrientation(
                 new Vector3d(rotationMatrix[0],rotationMatrix[4],rotationMatrix[8]),
                 new Vector3d(rotationMatrix[1],rotationMatrix[5],rotationMatrix[9]),
