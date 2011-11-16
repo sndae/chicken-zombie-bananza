@@ -1,8 +1,36 @@
+/**
+ * Copyright (c) 2011, Chicken Zombie Bonanza Project
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *     * Neither the name of the Chicken Zombie Bonanza Project nor the
+ *       names of its contributors may be used to endorse or promote products
+ *       derived from this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL CHICKEN ZOMBIE BONANZA PROJECT BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 package ucf.chickenzombiebonanza.android.opengl;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -13,22 +41,27 @@ import ucf.chickenzombiebonanza.common.sensor.OrientationListener;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
-import android.util.Log;
 
+/**
+ * 
+ */
 public class ShootingGameGLES20Renderer implements GLSurfaceView.Renderer, OrientationListener {
 	
     private final String vertexShaderCode = 
         "uniform mat4 uMVPMatrix;   \n" +            
         "attribute vec4 vPosition;  \n" +
+        "attribute vec4 vColor;  \n" +
+        "varying vec4 fragColor;  \n" +
         "void main(){               \n" +
+        " fragColor = vColor; \n" +
         " gl_Position = uMVPMatrix * vPosition; \n" +
         "}  \n";
 
     private final String fragmentShaderCode = 
         "precision mediump float;  \n" + 
-        "uniform vec4 vColor;  \n" + 
+        "varying vec4 fragColor;  \n" +
         "void main(){              \n" + 
-        " gl_FragColor = vColor; \n" + 
+        " gl_FragColor = fragColor; \n" + 
         "}                         \n";
 
     private int mProgram;
@@ -41,10 +74,10 @@ public class ShootingGameGLES20Renderer implements GLSurfaceView.Renderer, Orien
     private float[] rotationViewMatrix = new float[16];
     //private float[] mVMatrix = new float[16];
     private float[] mProjMatrix = new float[16];
-
-    private FloatBuffer frontTriangleVB, rightTriangleVB, upTriangleVB;
     
-    private FloatBuffer frontTriangleCB, rightTriangleCB, upTriangleCB;
+    private int numPoints = 0;
+
+    private FloatBuffer frontTriangleVB;
 
     @Override
     public void onSurfaceCreated(GL10 unused, EGLConfig config) {
@@ -60,7 +93,7 @@ public class ShootingGameGLES20Renderer implements GLSurfaceView.Renderer, Orien
 
         // get handle to the vertex shader's vPosition member
         maPositionHandle = GLES20.glGetAttribLocation(mProgram, "vPosition");
-        colorHandle = GLES20.glGetUniformLocation(mProgram, "vColor");
+        colorHandle = GLES20.glGetAttribLocation(mProgram, "vColor");
         
         muMVPMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uMVPMatrix");
         
@@ -81,27 +114,13 @@ public class ShootingGameGLES20Renderer implements GLSurfaceView.Renderer, Orien
         //Draw Front Triangle
         
         // Prepare the triangle data
-        GLES20.glVertexAttribPointer(maPositionHandle, 3, GLES20.GL_FLOAT, false, 12, frontTriangleVB);
+        GLES20.glVertexAttribPointer(maPositionHandle, 4, GLES20.GL_FLOAT, false, 16, frontTriangleVB);
         GLES20.glEnableVertexAttribArray(maPositionHandle);
-        GLES20.glUniform4fv(colorHandle, 1, frontTriangleCB);
+        GLES20.glVertexAttribPointer(colorHandle, 4, GLES20.GL_FLOAT, false, 16, frontTriangleVB);
+        GLES20.glEnableVertexAttribArray(colorHandle);
 
         // Draw the triangle
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 3);
-        
-        //Draw Up Triangle        
-        GLES20.glVertexAttribPointer(maPositionHandle, 3, GLES20.GL_FLOAT, false, 12, upTriangleVB);
-        GLES20.glEnableVertexAttribArray(maPositionHandle);
-        GLES20.glUniform4fv(colorHandle, 1, upTriangleCB);
-
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 3);
-        
-        //Draw Right Triangle        
-        GLES20.glVertexAttribPointer(maPositionHandle, 3, GLES20.GL_FLOAT, false, 12, rightTriangleVB);
-        GLES20.glEnableVertexAttribArray(maPositionHandle);
-        GLES20.glUniform4fv(colorHandle, 1, rightTriangleCB);
-
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 3);
-
+        GLES20.glDrawArrays(GLES20.GL_LINE_STRIP, 0, numPoints);
     }
     
     public static void gluPerspective(float[] matrix, float fovy, float aspect, float zNear, float zFar) {
@@ -135,11 +154,36 @@ public class ShootingGameGLES20Renderer implements GLSurfaceView.Renderer, Orien
     }
 
     private void initShapes() {
+        
+        List<Float> points = new ArrayList<Float>();
+        
+        points.add(1f);
+        points.add(0f);
+        points.add(0f);
+        points.add(1f);
+        
+        points.add(0f);
+        points.add(1f);
+        points.add(0f);
+        points.add(1f);
+        
+        points.add(0f);
+        points.add(0f);
+        points.add(1f);
+        points.add(1f);
+        
+        numPoints = points.size()/4;
+        
 
-        float frontTriangleCoords[] = {
-            -0.5f, -0.25f,        3.0f, 
-             0.5f, -0.25f,        3.0f, 
-             0.0f,  0.559016994f, 3.0f };
+        float frontTriangleCoords[] = new float[points.size()];
+        for(int i = 0; i < points.size(); ++i) {
+            frontTriangleCoords[i] = points.get(i).floatValue();
+        }
+        
+        //float frontTriangleCoords[] = {
+        //    -0.5f, -0.25f,        3.0f, 1.0f ,
+        //     0.5f, -0.25f,        3.0f, 1.0f,
+        //     0.0f,  0.559016994f, 3.0f, 1.0f};
 
         // initialize vertex Buffer for triangle
         ByteBuffer vbb = ByteBuffer.allocateDirect(frontTriangleCoords.length * 4);
@@ -148,54 +192,10 @@ public class ShootingGameGLES20Renderer implements GLSurfaceView.Renderer, Orien
         frontTriangleVB.put(frontTriangleCoords); // add the coordinates to the FloatBuffer
         frontTriangleVB.position(0); // set the buffer to read the first coordinate
 
-        float frontColor[] = {1.0f, 0.0f, 0.0f, 1.0f};
-        vbb = ByteBuffer.allocateDirect(frontColor.length * 4);
-        vbb.order(ByteOrder.nativeOrder());
-        frontTriangleCB = vbb.asFloatBuffer();
-        frontTriangleCB.put(frontColor);
-        frontTriangleCB.position(0);
-
-        float upTriangleCoords[] = { 
-            -0.5f, -3.0f, -0.25f, 
-             0.5f, -3.0f, -0.25f, 
-             0.0f, -3.0f,  0.559016994f};
-
-        vbb = ByteBuffer.allocateDirect(upTriangleCoords.length * 4);
-        vbb.order(ByteOrder.nativeOrder());
-        upTriangleVB = vbb.asFloatBuffer();
-        upTriangleVB.put(upTriangleCoords);
-        upTriangleVB.position(0);
-        
-        float upColor[] = {0.0f, 1.0f, 0.0f, 1.0f};
-        vbb = ByteBuffer.allocateDirect(upColor.length * 4);
-        vbb.order(ByteOrder.nativeOrder());
-        upTriangleCB = vbb.asFloatBuffer();
-        upTriangleCB.put(upColor);
-        upTriangleCB.position(0);
-        
-        float rightTriangleCoords[] = { 
-            3.0f, -0.25f,        -0.5f, 
-            3.0f, -0.25f,         0.5f,
-            3.0f,  0.559016994f,  0.0f};
-
-        vbb = ByteBuffer.allocateDirect(rightTriangleCoords.length * 4);
-        vbb.order(ByteOrder.nativeOrder());
-        rightTriangleVB = vbb.asFloatBuffer();
-        rightTriangleVB.put(rightTriangleCoords);
-        rightTriangleVB.position(0);
-        
-        float rightColor[] = {0.0f, 0.0f, 1.0f, 1.0f};
-        vbb = ByteBuffer.allocateDirect(rightColor.length * 4);
-        vbb.order(ByteOrder.nativeOrder());
-        rightTriangleCB = vbb.asFloatBuffer();
-        rightTriangleCB.put(rightColor);
-        rightTriangleCB.position(0);
-
     }
 
     @Override
     public void receiveOrientationUpdate(LocalOrientation orientation) {
-        Log.d("Renderer",orientation.toString());
         Matrix.setIdentityM(rotationViewMatrix, 0);
         rotationViewMatrix[0] = (float) orientation.getRight().u();
         rotationViewMatrix[4] = (float) orientation.getRight().v();

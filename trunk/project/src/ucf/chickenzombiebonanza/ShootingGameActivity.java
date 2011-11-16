@@ -33,6 +33,8 @@ import android.content.Context;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.os.PowerManager;
+import android.view.Window;
+import android.view.WindowManager;
 
 /**
  * 
@@ -48,11 +50,14 @@ public class ShootingGameActivity extends AbstractGameActivity {
 	@Override
 	public void onCreate(Bundle bundle) {
 		super.onCreate(bundle);
+		
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
         renderer = new ShootingGameGLES20Renderer();
         glView = new ShootingGameSurfaceView(this);
         setContentView(glView);
-
+        
 		GameManager.getInstance().getPlayerOrientationPublisher().registerForOrientationUpdates(renderer);
 		
 		PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
