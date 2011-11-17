@@ -70,14 +70,14 @@ public class ShootingGameGLES20Renderer implements GLSurfaceView.Renderer, Orien
     
     private int muMVPMatrixHandle;
     private float[] mMVPMatrix = new float[16];
-    //private float[] translateViewMatrix = new float[16];
+    private float[] translateViewMatrix = new float[16];
     private float[] rotationViewMatrix = new float[16];
-    //private float[] mVMatrix = new float[16];
+    private float[] mVMatrix = new float[16];
     private float[] mProjMatrix = new float[16];
     
     private int numPoints = 0;
 
-    private FloatBuffer frontTriangleVB;
+    private FloatBuffer floorVB, floorCB, orientationVB, orientationCB;
 
     @Override
     public void onSurfaceCreated(GL10 unused, EGLConfig config) {
@@ -98,6 +98,8 @@ public class ShootingGameGLES20Renderer implements GLSurfaceView.Renderer, Orien
         muMVPMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uMVPMatrix");
         
         Matrix.setIdentityM(rotationViewMatrix, 0);
+        
+        Matrix.setLookAtM(translateViewMatrix, 0, 0, 3, -3, 0, 0, 0, 0, 1, 0);
 
         initShapes();
     }
@@ -108,19 +110,25 @@ public class ShootingGameGLES20Renderer implements GLSurfaceView.Renderer, Orien
 
         // Add program to OpenGL environment
         GLES20.glUseProgram(mProgram);
-        Matrix.multiplyMM(mMVPMatrix, 0, mProjMatrix, 0, rotationViewMatrix, 0);
+        //Matrix.multiplyMM(mVMatrix, 0, rotationViewMatrix, 0, translateViewMatrix, 0);
+        Matrix.multiplyMM(mMVPMatrix, 0, mProjMatrix, 0, translateViewMatrix, 0);
         GLES20.glUniformMatrix4fv(muMVPMatrixHandle, 1, false, mMVPMatrix, 0);
 
         //Draw Front Triangle
         
         // Prepare the triangle data
-        GLES20.glVertexAttribPointer(maPositionHandle, 4, GLES20.GL_FLOAT, false, 16, frontTriangleVB);
+        GLES20.glVertexAttribPointer(maPositionHandle, 4, GLES20.GL_FLOAT, false, 16, floorVB);
         GLES20.glEnableVertexAttribArray(maPositionHandle);
-        GLES20.glVertexAttribPointer(colorHandle, 4, GLES20.GL_FLOAT, false, 16, frontTriangleVB);
+        GLES20.glVertexAttribPointer(colorHandle, 4, GLES20.GL_FLOAT, false, 16, floorCB);
         GLES20.glEnableVertexAttribArray(colorHandle);
 
         // Draw the triangle
-        GLES20.glDrawArrays(GLES20.GL_LINE_STRIP, 0, numPoints);
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, numPoints);
+        
+        GLES20.glVertexAttribPointer(maPositionHandle, 4, GLES20.GL_FLOAT, false, 16, orientationVB);
+        GLES20.glVertexAttribPointer(colorHandle, 4, GLES20.GL_FLOAT, false, 16, orientationCB);
+        
+        GLES20.glDrawArrays(GLES20.GL_LINES, 0, 2);
     }
     
     public static void gluPerspective(float[] matrix, float fovy, float aspect, float zNear, float zFar) {
@@ -137,7 +145,7 @@ public class ShootingGameGLES20Renderer implements GLSurfaceView.Renderer, Orien
 		
 		float ratio = (float) width / height;
         
-		gluPerspective(mProjMatrix, 45.0f, ratio, 0.01f, 10.0f);
+		gluPerspective(mProjMatrix, 45.0f, ratio, 0.5f, 15.0f);
 	}
 	
     private int loadShader(int type, String shaderCode) {
@@ -157,7 +165,27 @@ public class ShootingGameGLES20Renderer implements GLSurfaceView.Renderer, Orien
         
         List<Float> points = new ArrayList<Float>();
         
+        points.add(0f);
+        points.add(0f);
+        points.add(0f);
         points.add(1f);
+        
+        points.add(0f);
+        points.add(1f);
+        points.add(0f);
+        points.add(1f);
+        
+        points.add(1f);
+        points.add(0f);
+        points.add(0f);
+        points.add(1f);
+        
+        points.add(0f);
+        points.add(-1f);
+        points.add(0f);
+        points.add(1f);
+        
+        points.add(-1f);
         points.add(0f);
         points.add(0f);
         points.add(1f);
@@ -167,49 +195,132 @@ public class ShootingGameGLES20Renderer implements GLSurfaceView.Renderer, Orien
         points.add(0f);
         points.add(1f);
         
-        points.add(0f);
-        points.add(0f);
-        points.add(1f);
-        points.add(1f);
-        
-        numPoints = points.size()/4;
-        
+        numPoints = points.size()/4;        
 
         float frontTriangleCoords[] = new float[points.size()];
         for(int i = 0; i < points.size(); ++i) {
             frontTriangleCoords[i] = points.get(i).floatValue();
         }
-        
-        //float frontTriangleCoords[] = {
-        //    -0.5f, -0.25f,        3.0f, 1.0f ,
-        //     0.5f, -0.25f,        3.0f, 1.0f,
-        //     0.0f,  0.559016994f, 3.0f, 1.0f};
 
         // initialize vertex Buffer for triangle
         ByteBuffer vbb = ByteBuffer.allocateDirect(frontTriangleCoords.length * 4);
         vbb.order(ByteOrder.nativeOrder());// use the device hardware's native byte order
-        frontTriangleVB = vbb.asFloatBuffer(); // create a floating point buffer from the ByteBuffer
-        frontTriangleVB.put(frontTriangleCoords); // add the coordinates to the FloatBuffer
-        frontTriangleVB.position(0); // set the buffer to read the first coordinate
+        floorVB = vbb.asFloatBuffer(); // create a floating point buffer from the ByteBuffer
+        floorVB.put(frontTriangleCoords); // add the coordinates to the FloatBuffer
+        floorVB.position(0); // set the buffer to read the first coordinate
+        
+        List<Float> colors = new ArrayList<Float>();
+        
+        colors.add(1f);
+        colors.add(1f);
+        colors.add(1f);
+        colors.add(1f);
+        
+        colors.add(1f);
+        colors.add(0f);
+        colors.add(0f);
+        colors.add(1f);
+        
+        colors.add(0f);
+        colors.add(1f);
+        colors.add(0f);
+        colors.add(1f);
+        
+        colors.add(0f);
+        colors.add(0f);
+        colors.add(1f);
+        colors.add(1f);
+        
+        colors.add(0f);
+        colors.add(0f);
+        colors.add(0f);
+        colors.add(1f);
+        
+        colors.add(1f);
+        colors.add(0f);
+        colors.add(0f);
+        colors.add(1f);
+        
+        numPoints = colors.size()/4;        
 
+        float colorArray[] = new float[colors.size()];
+        for(int i = 0; i < colors.size(); ++i) {
+            colorArray[i] = colors.get(i).floatValue();
+        }
+
+        // initialize vertex Buffer for triangle
+        vbb = ByteBuffer.allocateDirect(colorArray.length * 4);
+        vbb.order(ByteOrder.nativeOrder());// use the device hardware's native byte order
+        floorCB = vbb.asFloatBuffer(); // create a floating point buffer from the ByteBuffer
+        floorCB.put(colorArray); // add the coordinates to the FloatBuffer
+        floorCB.position(0); // set the buffer to read the first coordinate
+        
+        float positionArray[] = new float[8];
+        
+        vbb = ByteBuffer.allocateDirect(positionArray.length * 4);
+        vbb.order(ByteOrder.nativeOrder());// use the device hardware's native byte order
+        orientationVB = vbb.asFloatBuffer(); // create a floating point buffer from the ByteBuffer
+        orientationVB.put(positionArray); // add the coordinates to the FloatBuffer
+        orientationVB.position(0); // set the buffer to read the first coordinate
+        
+        colorArray = new float[8];
+        for(int i = 0; i < colorArray.length; ++ i) {
+            colorArray[i] = 1f;
+        }
+        
+        vbb = ByteBuffer.allocateDirect(colorArray.length * 4);
+        vbb.order(ByteOrder.nativeOrder());// use the device hardware's native byte order
+        orientationCB = vbb.asFloatBuffer(); // create a floating point buffer from the ByteBuffer
+        orientationCB.put(colorArray); // add the coordinates to the FloatBuffer
+        orientationCB.position(0); // set the buffer to read the first coordinate
     }
 
     @Override
     public void receiveOrientationUpdate(LocalOrientation orientation) {
         Matrix.setIdentityM(rotationViewMatrix, 0);
         rotationViewMatrix[0] = (float) orientation.getRight().u();
-        rotationViewMatrix[4] = (float) orientation.getRight().v();
-        rotationViewMatrix[8] = (float) orientation.getRight().w();
+        rotationViewMatrix[1] = (float) orientation.getRight().v();
+        rotationViewMatrix[2] = (float) orientation.getRight().w();
         
-        rotationViewMatrix[1] = (float) orientation.getUp().u();
+        rotationViewMatrix[4] = (float) orientation.getUp().u();
         rotationViewMatrix[5] = (float) orientation.getUp().v();
-        rotationViewMatrix[9] = (float) orientation.getUp().w();
+        rotationViewMatrix[6] = (float) orientation.getUp().w();
         
-        rotationViewMatrix[2] = (float) orientation.getLookAt().u();
-        rotationViewMatrix[6] = (float) orientation.getLookAt().v();
+        rotationViewMatrix[8] = (float) orientation.getLookAt().u();
+        rotationViewMatrix[9] = (float) orientation.getLookAt().v();
         rotationViewMatrix[10] = (float) orientation.getLookAt().w();
         
-        Matrix.invertM(rotationViewMatrix, 0, rotationViewMatrix, 0);
+        float positionArray[] = new float[8];
+        
+        positionArray[0] = (float) orientation.getLookAt().u();
+        positionArray[1] = (float) orientation.getLookAt().v();
+        positionArray[2] = (float) orientation.getLookAt().w() + 1f;
+        positionArray[3] = 1f;
+        positionArray[4] = 0f;
+        positionArray[5] = 0f;
+        positionArray[6] = 1f;
+        positionArray[7] = 1f;
+        
+        
+        ByteBuffer vbb = ByteBuffer.allocateDirect(positionArray.length * 4);
+        vbb.order(ByteOrder.nativeOrder());// use the device hardware's native byte order
+        orientationVB = vbb.asFloatBuffer(); // create a floating point buffer from the ByteBuffer
+        orientationVB.put(positionArray); // add the coordinates to the FloatBuffer
+        orientationVB.position(0); // set the buffer to read the first coordinate
+        
+        float[] colorArray = new float[8];
+        for(int i = 0; i < 2; ++ i) {
+            positionArray[i*4] = (float) orientation.getLookAt().u();
+            positionArray[i*4+1] = (float) orientation.getLookAt().v();
+            positionArray[i*4+2] = (float) orientation.getLookAt().w();
+            positionArray[i*4+3] = 1f;
+        }
+        
+        vbb = ByteBuffer.allocateDirect(colorArray.length * 4);
+        vbb.order(ByteOrder.nativeOrder());// use the device hardware's native byte order
+        orientationCB = vbb.asFloatBuffer(); // create a floating point buffer from the ByteBuffer
+        orientationCB.put(colorArray); // add the coordinates to the FloatBuffer
+        orientationCB.position(0); // set the buffer to read the first coordinate
     }
 
 }

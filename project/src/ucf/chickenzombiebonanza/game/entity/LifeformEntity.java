@@ -2,6 +2,8 @@ package ucf.chickenzombiebonanza.game.entity;
 
 import ucf.chickenzombiebonanza.common.GeocentricCoordinate;
 import ucf.chickenzombiebonanza.common.LocalOrientation;
+import ucf.chickenzombiebonanza.common.sensor.OrientationPublisher;
+import ucf.chickenzombiebonanza.common.sensor.PositionPublisher;
 import ucf.chickenzombiebonanza.game.item.HasInventory;
 import ucf.chickenzombiebonanza.game.item.InventoryObject;
 
@@ -11,7 +13,7 @@ import ucf.chickenzombiebonanza.game.item.InventoryObject;
  */
 public class LifeformEntity extends GameEntity implements HasInventory {
 	
-	private int health;
+	private int maxHealth, currentHealth;
 	
 	/*status used for zombie chicken objects.
 	 * 0. standing
@@ -22,16 +24,20 @@ public class LifeformEntity extends GameEntity implements HasInventory {
 	*/
 	private LifeformEntityStateEnum state;
 	
-	public LifeformEntity(GeocentricCoordinate position, LocalOrientation orientation) {
-		super(position, orientation, GameEntityTagEnum.LIFEFORM);
-		this.health = 100;
+	public LifeformEntity(PositionPublisher positionPublisher, OrientationPublisher orientationPublisher) {
+		super(positionPublisher.getCurrentPosition(), 
+		    orientationPublisher.getCurrentOrientation(), 
+		    GameEntityTagEnum.LIFEFORM);
+		this.maxHealth = 100;
+		this.currentHealth = 100;
 		this.state = LifeformEntityStateEnum.ALIVE;
 		
 	}
 	
 	public LifeformEntity(int health, LifeformEntityStateEnum status, GeocentricCoordinate position, LocalOrientation orientation){
 		super(position, orientation, GameEntityTagEnum.LIFEFORM);
-		this.health = health;
+		this.maxHealth = health;
+		this.currentHealth = health;
 		this.state = status;
 		
 	}
@@ -39,15 +45,15 @@ public class LifeformEntity extends GameEntity implements HasInventory {
 	
 	
 	int getHealth(){
-		return health;
+		return currentHealth;
 	}
 	
 	LifeformEntityStateEnum getStatus(){
 		return state;
 	}
 	
-	void setHealth(int newhealth){
-		this.health = newhealth;
+	void setHealth(int currentHealth){
+		this.currentHealth = currentHealth;
 	}
 	
 	void setStatus(LifeformEntityStateEnum newstatus){
