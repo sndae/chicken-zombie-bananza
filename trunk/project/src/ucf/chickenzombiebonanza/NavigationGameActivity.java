@@ -88,7 +88,7 @@ public class NavigationGameActivity extends AbstractGameMapActivity {
         gp = new GeoPoint(latE6, lonE6);
         //mapControl.animateTo(gp);  
         
-       
+       /*
         
         
 
@@ -119,16 +119,12 @@ public class NavigationGameActivity extends AbstractGameMapActivity {
                 // Added symbols will be displayed when map is redrawn so force redraw now
                 mapView.postInvalidate(); 
             }
+         
         });
 
-			
+			*/
 	}
-	//array list to store enemy positions static storage
-		private OverlayItem [] enemy = {
-	            new OverlayItem( new GeoPoint(35952967,-83929158), "enemy 1", "zombie chicken 1"), 
-	            new OverlayItem( new GeoPoint(35953000,-83928000), "enemy 2", "zombie chicken 2"),
-	            new OverlayItem( new GeoPoint(35955000,-83929158), "enemy 3", "zombie chicken 3") 
-	        };
+
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 	    MenuInflater inflater = getMenuInflater();
@@ -141,8 +137,7 @@ public class NavigationGameActivity extends AbstractGameMapActivity {
 		// Handle item selection
 		switch (item.getItemId()) {
 			case R.id.settingsoption:
-				GameManager.getInstance().updateGameState(
-						GameStateEnum.GAME_SETTINGS);
+				GameManager.getInstance().updateGameState(GameStateEnum.GAME_SETTINGS);
 				return true;
 			case R.id.launchshootinggame:
 				GameManager.getInstance().updateGameState(GameStateEnum.GAME_SHOOTING);

@@ -59,6 +59,8 @@ public class GameManager implements GameSettingsChangeListener {
 
 	private final GameSettings gameSettings = new GameSettings();
 	
+	private GameEntity playerEntity = null;
+	
 	private OrientationPublisher playerOrientation;
 
 	public static GameManager getInstance() {
