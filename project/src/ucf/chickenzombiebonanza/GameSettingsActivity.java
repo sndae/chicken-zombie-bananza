@@ -27,11 +27,13 @@
 package ucf.chickenzombiebonanza;
 
 import ucf.chickenzombiebonanza.game.GameManager;
+import ucf.chickenzombiebonanza.game.GameSettings;
 import ucf.chickenzombiebonanza.game.GameStateEnum;
 import ucf.chickenzombiebonanza.game.DifficultyEnum;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.text.Editable;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -54,8 +56,8 @@ public final class GameSettingsActivity extends AbstractGameActivity {
 		Button backButton = (Button) findViewById(R.id.backButton);
 		Button applyButton = (Button) findViewById(R.id.buttonApply);
 		Button showPlayAreaButton = (Button) findViewById(R.id.playAreaButton);
-		EditText playAreaHeight = (EditText) findViewById(R.id.playAreaHeight);
-		EditText playAreaWidth = (EditText) findViewById(R.id.playAreaWidth);
+		final EditText playAreaRadius = (EditText) findViewById(R.id.playAreaRadius);
+		//EditText playAreaWidth = (EditText) findViewById(R.id.playAreaWidth); Gone now
 		final AlertDialog alertDialog;
 		alertDialog = new AlertDialog.Builder(this).create();
 		//This probably shouldn't be here
@@ -79,17 +81,23 @@ public final class GameSettingsActivity extends AbstractGameActivity {
 		        if(rE.isChecked()==true){//Easy
 		        //setContentView(R.layout.main);//No idea what this does.
 		        Difficulty = DifficultyEnum.EASY;
+		        	//setGameDifficulty(DifficultyEnum.EASY);
+		        	//GameManager.getInstance().getGameSettings().setGameDifficulty(DifficultyEnum.EASY);
 		        
 		        }
 		        else if(rM.isChecked()==true)//Medium
 		        {
 		        //setContentView(R.layout.main);
 		        Difficulty = DifficultyEnum.MEDIUM;
+		        	//setGameDifficulty(DifficultyEnum.MEDIUM);
+		        	//GameManager.getInstance().getGameSettings().setGameDifficulty(DifficultyEnum.MEDIUM);
 		        }
 		        else if(rH.isChecked()==true)//Hard
 		        {
 		        //setContentView(R.layout.main);
 		        Difficulty = DifficultyEnum.HARD;
+		        	//setGameDifficulty(DifficultyEnum.HARD);
+		        	//GameManager.getInstance().getGameSettings().setGameDifficulty(DifficultyEnum.HARD);
 		        }
 			}
 		 });
@@ -109,22 +117,16 @@ public final class GameSettingsActivity extends AbstractGameActivity {
 			@Override
 			public void onClick(View arg0) {
 				
-				alertDialog.setTitle("Settings saves");//THIS DOESNT SAVE ANYTHING YET!
-				alertDialog.setMessage("The Difficulty is now "+ Difficulty);
-				alertDialog.show();
+				alertDialog.setTitle("Settings saved");//THIS DOESNT SAVE ANYTHING YET!
+				GameManager.getInstance().getGameSettings().setGameDifficulty(Difficulty);
 				
-				/*alertDialog.setButton("OK", new OnClickListener(){
-
-					public void onClick(DialogInterface dialog, int which) {               
-					//...
-					}
-
-					@Override
-					public void onClick(View v) {
-						// TODO Auto-generated method stub
-						
-					}
-					});*/
+				Editable radiusConvert = playAreaRadius.getText();
+				String radiusString = radiusConvert.toString();
+				Float radiusValue = new Float(radiusString);
+				
+				GameManager.getInstance().getGameSettings().setPlayAreaRadius(radiusValue);
+				alertDialog.setMessage(radiusValue+" \nThe Difficulty is now "+ GameManager.getInstance().getGameSettings().getGameDifficulty() + "\n The Radius is now " 
+				+ GameManager.getInstance().getGameSettings().getPlayAreaRadius());
 				alertDialog.show();
 				
 			}
@@ -132,7 +134,7 @@ public final class GameSettingsActivity extends AbstractGameActivity {
 		
 		/////////////////////////////////
 		//When Ever we get the value of the radius, get the value or set value, a call will be made
-		GameManager.getInstance().getGameSettings().getPlayAreaRadius();
+		
 	}
 
 	@Override
