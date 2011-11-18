@@ -51,7 +51,7 @@ import android.opengl.Matrix;
  */
 public class ShootingGameGLES20Renderer implements GLSurfaceView.Renderer, OrientationListener {
 
-    private int mProgram;
+    private int simpleProgram, billboardProgram;
     private int maPositionHandle;
     private int colorHandle;
     
@@ -62,7 +62,7 @@ public class ShootingGameGLES20Renderer implements GLSurfaceView.Renderer, Orien
     
     private int numPoints = 0;
 
-    private FloatBuffer floorVertexBuffer, floorColorBuffer;
+    private FloatBuffer floorVertexBuffer, floorColorBuffer, billboardVertexBuffer, billboardColorBuffer;
     
     private final Context shootingGameContext;
     
@@ -74,27 +74,39 @@ public class ShootingGameGLES20Renderer implements GLSurfaceView.Renderer, Orien
     public void onSurfaceCreated(GL10 unused, EGLConfig config) {
         GLES20.glClearColor(0f, 0f, 0f, 1.0f);
 
-        int vertexShader = loadShaderFromFile(GLES20.GL_VERTEX_SHADER, R.raw.simplevertshader);
-        int fragmentShader = loadShaderFromFile(GLES20.GL_FRAGMENT_SHADER, R.raw.simplefragshader);
+        int simpleVertexShader = loadShaderFromFile(GLES20.GL_VERTEX_SHADER, R.raw.simplevertshader);
+        int simpleFragmentShader = loadShaderFromFile(GLES20.GL_FRAGMENT_SHADER, R.raw.simplefragshader);
 
-        mProgram = GLES20.glCreateProgram(); // create empty OpenGL Program
-        GLES20.glAttachShader(mProgram, vertexShader); // add the vertex shader to program
-        GLES20.glAttachShader(mProgram, fragmentShader); // add the fragment shader to program
-        GLES20.glLinkProgram(mProgram); // creates OpenGL program executables
-
+        simpleProgram = GLES20.glCreateProgram(); // create empty OpenGL Program
+        GLES20.glAttachShader(simpleProgram, simpleVertexShader); // add the vertex shader to program
+        GLES20.glAttachShader(simpleProgram, simpleFragmentShader); // add the fragment shader to program
+        GLES20.glLinkProgram(simpleProgram); // creates OpenGL program executables
+        
+        int billboardVertexShader = loadShaderFromFile(GLES20.GL_VERTEX_SHADER, R.raw.billboardvertshader);
+        int billboardFragmentShader = loadShaderFromFile(GLES20.GL_FRAGMENT_SHADER, R.raw.billboardfragshader);
+        
+        billboardProgram = GLES20.glCreateProgram();
+        GLES20.glAttachShader(billboardProgram, billboardVertexShader);
+        GLES20.glAttachShader(billboardProgram, billboardFragmentShader);
+        GLES20.glLinkProgram(billboardProgram);
+        
         // get handle to the vertex shader's vPosition member
-        maPositionHandle = GLES20.glGetAttribLocation(mProgram, "vPosition");
-        colorHandle = GLES20.glGetAttribLocation(mProgram, "vColor");
+        maPositionHandle = GLES20.glGetAttribLocation(simpleProgram, "vPosition");
+        colorHandle = GLES20.glGetAttribLocation(simpleProgram, "vColor");
         
-        muMVPMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uMVPMatrix");
-        
+        muMVPMatrixHandle = GLES20.glGetUniformLocation(simpleProgram, "uMVPMatrix");
         
         initFloor();
+        
+        initBillboard();
     }
     
     private void renderFloor() {
         GLES20.glEnable(GLES20.GL_BLEND);
         GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
+        
+        GLES20.glUseProgram(simpleProgram);
+        GLES20.glUniformMatrix4fv(muMVPMatrixHandle, 1, false, mMVPMatrix, 0);
         
         GLES20.glVertexAttribPointer(maPositionHandle, 4, GLES20.GL_FLOAT, false, 16, floorVertexBuffer);
         GLES20.glEnableVertexAttribArray(maPositionHandle);
@@ -105,15 +117,33 @@ public class ShootingGameGLES20Renderer implements GLSurfaceView.Renderer, Orien
         
         GLES20.glDisable(GLES20.GL_BLEND);
     }
+    
+    private void renderBillboard() {
+        
+        GLES20.glEnable(GLES20.GL_BLEND);
+        GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
+        
+        GLES20.glUseProgram(billboardProgram);
+        GLES20.glUniformMatrix4fv(muMVPMatrixHandle, 1, false, mMVPMatrix, 0);
+        
+        GLES20.glVertexAttribPointer(maPositionHandle, 4, GLES20.GL_FLOAT, false, 16, billboardVertexBuffer);
+        GLES20.glEnableVertexAttribArray(maPositionHandle);
+        GLES20.glVertexAttribPointer(colorHandle, 4, GLES20.GL_FLOAT, false, 16, billboardColorBuffer);
+        GLES20.glEnableVertexAttribArray(colorHandle);
+
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
+        
+        GLES20.glDisable(GLES20.GL_BLEND);
+    }
 	
     @Override
     public void onDrawFrame(GL10 unused) {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
 
-        GLES20.glUseProgram(mProgram);
         Matrix.multiplyMM(mMVPMatrix, 0, mProjMatrix, 0, mVMatrix, 0);
-        GLES20.glUniformMatrix4fv(muMVPMatrixHandle, 1, false, mMVPMatrix, 0);
 
+        renderBillboard();
+        
         renderFloor();
     }
     
@@ -194,6 +224,34 @@ public class ShootingGameGLES20Renderer implements GLSurfaceView.Renderer, Orien
         floorColorBuffer.position(0);
         
         numPoints = 6;
+    }
+    
+    private void initBillboard() {
+        float billboardVertexArray[] = new float[]{
+            8.0f, 8.0f, -1.0f, 1.0f,
+            8.0f, 8.0f,  4.0f, 1.0f,
+            8.0f, 9.0f, -1.0f, 1.0f,
+            8.0f, 9.0f,  4.0f, 1.0f,
+      };
+        
+        ByteBuffer vbb = ByteBuffer.allocateDirect(billboardVertexArray.length * 4);
+        vbb.order(ByteOrder.nativeOrder());
+        billboardVertexBuffer = vbb.asFloatBuffer();
+        billboardVertexBuffer.put(billboardVertexArray);
+        billboardVertexBuffer.position(0);
+
+        float billboardColorArray[] = new float[]{
+            1.0f, 1.0f, 1.0f, 1.0f,
+            1.0f, 1.0f, 1.0f, 1.0f,
+            1.0f, 1.0f, 1.0f, 1.0f,
+            1.0f, 1.0f, 1.0f, 1.0f,
+        };
+
+        ByteBuffer cbb = ByteBuffer.allocateDirect(billboardColorArray.length * 4);
+        cbb.order(ByteOrder.nativeOrder());
+        billboardColorBuffer = cbb.asFloatBuffer();
+        billboardColorBuffer.put(billboardColorArray);
+        billboardColorBuffer.position(0);
     }
 
     @Override
