@@ -26,21 +26,26 @@
  */
 package ucf.chickenzombiebonanza.android.opengl;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
 import ucf.chickenzombiebonanza.common.LocalOrientation;
 import ucf.chickenzombiebonanza.common.sensor.OrientationListener;
+import ucf.chickenzombiebonanza.R;
 
+import android.content.Context;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
+import android.util.Log;
 
 /**
  * 
@@ -70,21 +75,25 @@ public class ShootingGameGLES20Renderer implements GLSurfaceView.Renderer, Orien
     
     private int muMVPMatrixHandle;
     private float[] mMVPMatrix = new float[16];
-    private float[] translateViewMatrix = new float[16];
-    private float[] rotationViewMatrix = new float[16];
     private float[] mVMatrix = new float[16];
     private float[] mProjMatrix = new float[16];
     
     private int numPoints = 0;
 
-    private FloatBuffer floorVB, floorCB;
+    private FloatBuffer floorVertexBuffer, floorColorBuffer;
+    
+    private final Context shootingGameContext;
+    
+    public ShootingGameGLES20Renderer(Context shootingGameContext) {
+        this.shootingGameContext = shootingGameContext;
+    }
 
     @Override
     public void onSurfaceCreated(GL10 unused, EGLConfig config) {
         GLES20.glClearColor(0f, 0f, 0f, 1.0f);
 
-        int vertexShader = loadShader(GLES20.GL_VERTEX_SHADER, vertexShaderCode);
-        int fragmentShader = loadShader(GLES20.GL_FRAGMENT_SHADER, fragmentShaderCode);
+        int vertexShader = loadShaderFromFile(GLES20.GL_VERTEX_SHADER, R.raw.simplevertshader);
+        int fragmentShader = loadShaderFromFile(GLES20.GL_FRAGMENT_SHADER, R.raw.simplefragshader);
 
         mProgram = GLES20.glCreateProgram(); // create empty OpenGL Program
         GLES20.glAttachShader(mProgram, vertexShader); // add the vertex shader to program
@@ -97,35 +106,36 @@ public class ShootingGameGLES20Renderer implements GLSurfaceView.Renderer, Orien
         
         muMVPMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uMVPMatrix");
         
+        
+        initFloor();
+    }
+    
+    private void renderFloor() {
         GLES20.glEnable(GLES20.GL_BLEND);
         GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
         
-        Matrix.setIdentityM(rotationViewMatrix, 0);
-        
-        Matrix.setLookAtM(translateViewMatrix, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0);
+        GLES20.glVertexAttribPointer(maPositionHandle, 4, GLES20.GL_FLOAT, false, 16, floorVertexBuffer);
+        GLES20.glEnableVertexAttribArray(maPositionHandle);
+        GLES20.glVertexAttribPointer(colorHandle, 4, GLES20.GL_FLOAT, false, 16, floorColorBuffer);
+        GLES20.glEnableVertexAttribArray(colorHandle);
 
-        initShapes();
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, numPoints);
+        
+        GLES20.glDisable(GLES20.GL_BLEND);
     }
 	
     @Override
     public void onDrawFrame(GL10 unused) {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
 
-        // Add program to OpenGL environment
         GLES20.glUseProgram(mProgram);
-        //Matrix.multiplyMM(mVMatrix, 0, rotationViewMatrix, 0, translateViewMatrix, 0);
-        Matrix.multiplyMM(mMVPMatrix, 0, mProjMatrix, 0, rotationViewMatrix, 0);
+        Matrix.multiplyMM(mMVPMatrix, 0, mProjMatrix, 0, mVMatrix, 0);
         GLES20.glUniformMatrix4fv(muMVPMatrixHandle, 1, false, mMVPMatrix, 0);
 
-        GLES20.glVertexAttribPointer(maPositionHandle, 4, GLES20.GL_FLOAT, false, 16, floorVB);
-        GLES20.glEnableVertexAttribArray(maPositionHandle);
-        GLES20.glVertexAttribPointer(colorHandle, 4, GLES20.GL_FLOAT, false, 16, floorCB);
-        GLES20.glEnableVertexAttribArray(colorHandle);
-
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, numPoints);
+        renderFloor();
     }
     
-    public static void gluPerspective(float[] matrix, float fovy, float aspect, float zNear, float zFar) {
+    private static void gluPerspective(float[] matrix, float fovy, float aspect, float zNear, float zFar) {
         float top = zNear * (float) Math.tan(fovy * (Math.PI / 360.0));
         float bottom = -top;
         float left = bottom * aspect;
@@ -142,108 +152,84 @@ public class ShootingGameGLES20Renderer implements GLSurfaceView.Renderer, Orien
 		gluPerspective(mProjMatrix, 45.0f, ratio, 0.9f, 20.0f);
 	}
 	
-    private int loadShader(int type, String shaderCode) {
+    private int loadShaderFromFile(int type, int resourceId) {
+        
+        InputStream is = shootingGameContext.getResources().openRawResource(resourceId);
+        BufferedReader br = new BufferedReader(new InputStreamReader(is));
+        
+        StringBuilder shaderCode = new StringBuilder();
+        String readLine;
+        
+        try {
+            while ((readLine = br.readLine()) != null) {
+                shaderCode.append(readLine);
+                shaderCode.append('\n');
+            }
+        } catch (IOException e) {
+        }
+        
+        Log.d("Shader",shaderCode.toString());
 
         // create a vertex shader type (GLES20.GL_VERTEX_SHADER)
         // or a fragment shader type (GLES20.GL_FRAGMENT_SHADER)
         int shader = GLES20.glCreateShader(type);
-
+        
         // add the source code to the shader and compile it
-        GLES20.glShaderSource(shader, shaderCode);
+        GLES20.glShaderSource(shader, shaderCode.toString());
         GLES20.glCompileShader(shader);
 
         return shader;
     }
 
-    private void initShapes() {
+    private void initFloor() {
         
-        List<Float> points = new ArrayList<Float>();
-        
-        points.add(0f);
-        points.add(0f);
-        points.add(-1f);
-        points.add(1f);
-        
-        points.add(0f);
-        points.add(10f);
-        points.add(-1f);
-        points.add(1f);
-        
-        points.add(10f);
-        points.add(0f);
-        points.add(-1f);
-        points.add(1f);
-        
-        points.add(0f);
-        points.add(-10f);
-        points.add(-1f);
-        points.add(1f);
-        
-        points.add(-10f);
-        points.add(0f);
-        points.add(-1f);
-        points.add(1f);
-        
-        points.add(0f);
-        points.add(10f);
-        points.add(-1f);
-        points.add(1f);
+        float floorVertexArray[] = new float[]{
+              0.0f,   0.0f, -1.0f, 1.0f,
+              0.0f,  10.0f, -1.0f, 1.0f,
+             10.0f,   0.0f, -1.0f, 1.0f,
+              0.0f, -10.0f, -1.0f, 1.0f,
+            -10.0f,   0.0f, -1.0f, 1.0f,
+              0.0f,  10.0f, -1.0f, 1.0f,
+        };
 
-        float floorCoords[] = new float[points.size()];
-        for(int i = 0; i < points.size(); ++i) {
-            floorCoords[i] = points.get(i).floatValue();
-        }
+        ByteBuffer vbb = ByteBuffer.allocateDirect(floorVertexArray.length * 4);
+        vbb.order(ByteOrder.nativeOrder());
+        floorVertexBuffer = vbb.asFloatBuffer();
+        floorVertexBuffer.put(floorVertexArray);
+        floorVertexBuffer.position(0);
 
-        // initialize vertex Buffer for triangle
-        ByteBuffer vbb = ByteBuffer.allocateDirect(floorCoords.length * 4);
-        vbb.order(ByteOrder.nativeOrder());// use the device hardware's native byte order
-        floorVB = vbb.asFloatBuffer(); // create a floating point buffer from the ByteBuffer
-        floorVB.put(floorCoords); // add the coordinates to the FloatBuffer
-        floorVB.position(0); // set the buffer to read the first coordinate
-        
-        List<Float> colors = new ArrayList<Float>();
-        
-        colors.add(0.2f);
-        colors.add(0.6f);
-        colors.add(0f);
-        colors.add(1f);
-        
-        for (int i = 0; i < 4; ++i) {
-            colors.add(0.2f);
-            colors.add(0.6f);
-            colors.add(0f);
-            colors.add(0f);
-        }
-        
-        numPoints = colors.size()/4;        
+        float floorColorArray[] = new float[]{
+            0.2f, 0.6f, 0.0f, 1.0f,
+            0.2f, 0.6f, 0.0f, 0.0f,
+            0.2f, 0.6f, 0.0f, 0.0f,
+            0.2f, 0.6f, 0.0f, 0.0f,
+            0.2f, 0.6f, 0.0f, 0.0f,
+            0.2f, 0.6f, 0.0f, 0.0f,
+        };
 
-        float colorArray[] = new float[colors.size()];
-        for(int i = 0; i < colors.size(); ++i) {
-            colorArray[i] = colors.get(i).floatValue();
-        }
-
-        // initialize vertex Buffer for triangle
-        vbb = ByteBuffer.allocateDirect(colorArray.length * 4);
-        vbb.order(ByteOrder.nativeOrder());// use the device hardware's native byte order
-        floorCB = vbb.asFloatBuffer(); // create a floating point buffer from the ByteBuffer
-        floorCB.put(colorArray); // add the coordinates to the FloatBuffer
-        floorCB.position(0); // set the buffer to read the first coordinate
+        ByteBuffer cbb = ByteBuffer.allocateDirect(floorColorArray.length * 4);
+        cbb.order(ByteOrder.nativeOrder());
+        floorColorBuffer = cbb.asFloatBuffer();
+        floorColorBuffer.put(floorColorArray);
+        floorColorBuffer.position(0);
+        
+        numPoints = 6;
     }
 
     @Override
     public void receiveOrientationUpdate(LocalOrientation orientation) {
-        Matrix.setIdentityM(rotationViewMatrix, 0);
-        rotationViewMatrix[0] = (float) orientation.getRight().u();
-        rotationViewMatrix[4] = (float) orientation.getRight().v();
-        rotationViewMatrix[8] = (float) orientation.getRight().w();
+        Matrix.setIdentityM(mVMatrix, 0);
+        mVMatrix[0] = (float) orientation.getRight().u();
+        mVMatrix[4] = (float) orientation.getRight().v();
+        mVMatrix[8] = (float) orientation.getRight().w();
         
-        rotationViewMatrix[1] = (float) orientation.getUp().u();
-        rotationViewMatrix[5] = (float) orientation.getUp().v();
-        rotationViewMatrix[9] = (float) orientation.getUp().w();
+        mVMatrix[1] = (float) orientation.getUp().u();
+        mVMatrix[5] = (float) orientation.getUp().v();
+        mVMatrix[9] = (float) orientation.getUp().w();
         
-        rotationViewMatrix[2] = (float) orientation.getLookAt().u();
-        rotationViewMatrix[6] = (float) orientation.getLookAt().v();
-        rotationViewMatrix[10] = (float) orientation.getLookAt().w();
+        mVMatrix[2] = (float) orientation.getLookAt().u();
+        mVMatrix[6] = (float) orientation.getLookAt().v();
+        mVMatrix[10] = (float) orientation.getLookAt().w();
     }
 
 }
