@@ -34,7 +34,6 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.opengl.Matrix;
 import ucf.chickenzombiebonanza.common.LocalOrientation;
 import ucf.chickenzombiebonanza.common.Vector3d;
 import ucf.chickenzombiebonanza.common.sensor.OrientationPublisher;
@@ -59,7 +58,7 @@ public class GyroscopeListener extends OrientationPublisher implements SensorEve
             public void run() {
                 GyroscopeListener.this.broadcastOrientation();
             }
-        }, 0, 250);
+        }, 0, 100);
         
         this.setSensorState(SensorStateEnum.PAUSED);		
 	}
@@ -101,8 +100,7 @@ public class GyroscopeListener extends OrientationPublisher implements SensorEve
             //Gets the rotation matrix to convert device coordinates to world coordinates
             SensorManager.getRotationMatrix(rotationMatrix, null, gravity, geomag);
             
-            //Invert (transpose is the same as invert for an orthonormal basis) to transform world coordinates into device coordinates
-            Matrix.transposeM(rotationMatrix, 0, rotationMatrix, 0);
+            SensorManager.remapCoordinateSystem(rotationMatrix, SensorManager.AXIS_Y, SensorManager.AXIS_MINUS_X, rotationMatrix);
             
             LocalOrientation orientation = new LocalOrientation(
                 new Vector3d(rotationMatrix[0],rotationMatrix[4],rotationMatrix[8]),
