@@ -14,11 +14,10 @@
 		<RadioButton android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/Medium" android:id="@+id/radioMedium"></RadioButton>
 		<RadioButton android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/Hard" android:id="@+id/radioHard"></RadioButton>
 	</RadioGroup>
-	<LinearLayout android:id="@+id/linearLayout2" android:layout_height="wrap_content" android:layout_width="match_parent">
-		<EditText android:layout_weight="1" android:layout_height="wrap_content" android:layout_width="match_parent" android:inputType="numberDecimal" android:id="@+id/playAreaHeight">
+	<LinearLayout android:id="@+id/linearLayout2" android:layout_height="wrap_content" android:layout_width="146dp">
+		<EditText android:layout_weight="1" android:layout_height="wrap_content" android:layout_width="match_parent" android:inputType="numberDecimal" android:id="@+id/playAreaRadius">
 			<requestFocus></requestFocus>
 		</EditText>
-		<EditText android:layout_weight="1" android:layout_height="wrap_content" android:layout_width="match_parent" android:inputType="numberDecimal" android:id="@+id/playAreaWidth"></EditText>
 	</LinearLayout>
 	<Button android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/buttonApply" android:text="@string/Apple"></Button>
 </LinearLayout>
