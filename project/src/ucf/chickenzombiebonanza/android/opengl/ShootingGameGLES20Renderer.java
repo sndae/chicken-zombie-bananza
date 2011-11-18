@@ -45,29 +45,11 @@ import android.content.Context;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
-import android.util.Log;
 
 /**
  * 
  */
 public class ShootingGameGLES20Renderer implements GLSurfaceView.Renderer, OrientationListener {
-	
-    private final String vertexShaderCode = 
-        "uniform mat4 uMVPMatrix;   \n" +            
-        "attribute vec4 vPosition;  \n" +
-        "attribute vec4 vColor;  \n" +
-        "varying vec4 fragColor;  \n" +
-        "void main(){               \n" +
-        " fragColor = vColor; \n" +
-        " gl_Position = uMVPMatrix * vPosition; \n" +
-        "}  \n";
-
-    private final String fragmentShaderCode = 
-        "precision mediump float;  \n" + 
-        "varying vec4 fragColor;  \n" +
-        "void main(){              \n" + 
-        " gl_FragColor = fragColor; \n" + 
-        "}                         \n";
 
     private int mProgram;
     private int maPositionHandle;
@@ -167,8 +149,6 @@ public class ShootingGameGLES20Renderer implements GLSurfaceView.Renderer, Orien
             }
         } catch (IOException e) {
         }
-        
-        Log.d("Shader",shaderCode.toString());
 
         // create a vertex shader type (GLES20.GL_VERTEX_SHADER)
         // or a fragment shader type (GLES20.GL_FRAGMENT_SHADER)
