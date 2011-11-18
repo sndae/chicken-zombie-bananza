@@ -43,7 +43,7 @@ public class ShootingGameActivity extends AbstractGameActivity {
 	
 	private GLSurfaceView glView;
 	
-	private ShootingGameGLES20Renderer renderer = new ShootingGameGLES20Renderer();
+	private ShootingGameGLES20Renderer renderer;
 	
 	private PowerManager.WakeLock wl;
 	
@@ -54,7 +54,7 @@ public class ShootingGameActivity extends AbstractGameActivity {
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
-        renderer = new ShootingGameGLES20Renderer();
+        renderer = new ShootingGameGLES20Renderer(this);
         glView = new ShootingGameSurfaceView(this);
         setContentView(glView);
         
