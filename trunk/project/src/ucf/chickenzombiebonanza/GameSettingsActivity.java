@@ -31,7 +31,9 @@ import ucf.chickenzombiebonanza.game.GameSettings;
 import ucf.chickenzombiebonanza.game.GameStateEnum;
 import ucf.chickenzombiebonanza.game.DifficultyEnum;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.text.Editable;
 import android.view.View;
@@ -113,6 +115,15 @@ public final class GameSettingsActivity extends AbstractGameActivity {
 			}
 		});
 		
+		showPlayAreaButton.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View arg0) {
+				//GameManager.getInstance().updateGameState(
+						//GameStateEnum.GAME_NAVIGATION);
+				//finish();
+			}
+		});
+		
 		applyButton.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View arg0) {
@@ -120,13 +131,19 @@ public final class GameSettingsActivity extends AbstractGameActivity {
 				alertDialog.setTitle("Settings saved");//THIS DOESNT SAVE ANYTHING YET!
 				GameManager.getInstance().getGameSettings().setGameDifficulty(Difficulty);
 				
-				Editable radiusConvert = playAreaRadius.getText();
-				String radiusString = radiusConvert.toString();
-				Float radiusValue = new Float(radiusString);
+				Editable radiusConvert = playAreaRadius.getText();//Gets the radius from the textbox
+				String radiusString = radiusConvert.toString();//Converts the Radius to a String
+				Float radiusValue = new Float(radiusString);//Sets radius to a float value
 				
-				GameManager.getInstance().getGameSettings().setPlayAreaRadius(radiusValue);
-				alertDialog.setMessage(radiusValue+" \nThe Difficulty is now "+ GameManager.getInstance().getGameSettings().getGameDifficulty() + "\n The Radius is now " 
+				GameManager.getInstance().getGameSettings().setPlayAreaRadius(radiusValue);//Sets the play area to the radius value.
+				
+				// Acquire a reference to the system Location Manager
+				//LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+				
+				alertDialog.setMessage("The Difficulty is now "+ GameManager.getInstance().getGameSettings().getGameDifficulty() + "\n The Radius is now " 
 				+ GameManager.getInstance().getGameSettings().getPlayAreaRadius());
+				
+				
 				alertDialog.show();
 				
 			}
