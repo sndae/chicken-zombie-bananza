@@ -50,6 +50,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.content.Context;
 
 /**
  * 
@@ -66,7 +67,12 @@ public class NavigationGameActivity extends AbstractGameMapActivity {
     private static double lon2=-81.382266;
 	private List<Overlay> mapOverlays;
     private Drawable drawable1;
+    private Drawable drawable2;
+    private Drawable drawable3;
     private MyItemizedOverlay itemizedOverlay1;
+    private MyItemizedOverlay itemizedOverlay2;
+    private MyItemizedOverlay itemizedOverlay3;
+    private boolean shootingGameStart = false;
     private boolean enemyIsDisplayed = false;
     private int latE6;
     private int lonE6;
@@ -77,6 +83,8 @@ public class NavigationGameActivity extends AbstractGameMapActivity {
     private GeoPoint gp1;
     private GeoPoint gp2;
     private Button overlayButton;
+    private Context context;
+    
     
 
 	@Override
@@ -91,7 +99,7 @@ public class NavigationGameActivity extends AbstractGameMapActivity {
 		mapView.setSatellite(false);
 
 		mapController = mapView.getController();
-		mapController.setZoom(21); // Zoom 1 is world view
+		mapController.setZoom(3); // Zoom 1 is world view
 		
 		 // Convert lat/long in degrees into integers in microdegrees
         latE6 =  (int) (lat*1e6);
@@ -131,19 +139,36 @@ public class NavigationGameActivity extends AbstractGameMapActivity {
 
         //arraylist of posible enemy postions
         OverlayItem [] enemy = {
-            new OverlayItem( new GeoPoint(latE6, lonE6), "enemy 1", "more details"), 
-            new OverlayItem( new GeoPoint(latE61,lonE62), "enemy 1", "more details") 
+            new OverlayItem( new GeoPoint((int) (22*1e6), (int)(56*1e6+9)), "enemy 1", "more details"), 
+            new OverlayItem( new GeoPoint(latE61,lonE62), "enemy 2", "more details"),
+            new OverlayItem( new GeoPoint((int)(lat+5*1e6),(int)(lon+5*1e6)), "enemy 3", "more details") 
              
         };
         
+        OverlayItem [] powerups = {
+            new OverlayItem( new GeoPoint((int) (2*1e6), (int)(5*1e6+9)), "powerups 1", "more details"), 
+            new OverlayItem( new GeoPoint(2*latE61,3*lonE62), "powerups 2", "more details"),
+            new OverlayItem( new GeoPoint((int)(lat+2*1e6),(int)(lon+5*1e6)), "powerups 3", "more details") 
+                 
+        };
+        
+        OverlayItem [] hero = {
+        	new OverlayItem( new GeoPoint((int)(lat*1e6),(int)(lon*1e6)), "hero 1", "more details")
+                 
+        };
         mapOverlays = mapView.getOverlays();
         drawable1 = this.getResources().getDrawable(R.drawable.chickendrawing2);
         itemizedOverlay1 = new MyItemizedOverlay(drawable1);
-          
-        for (int i=0; i<2 ;i++) {
-        	itemizedOverlay1.addOverlay(enemy[i]);
-        }
-        mapOverlays.add(itemizedOverlay1);
+        drawable2 = this.getResources().getDrawable(R.drawable.hero);
+        itemizedOverlay2 = new MyItemizedOverlay(drawable2);
+        drawable3 = this.getResources().getDrawable(R.drawable.powerup);
+        itemizedOverlay3 = new MyItemizedOverlay(drawable3);
+         
+        putHeroOnScreen(hero);
+        putEnemiesOnScreen(enemy);
+        putPowerupsOnScreen(powerups);
+        putWaypointsOnScreen();
+        
         
              
         
@@ -156,6 +181,42 @@ public class NavigationGameActivity extends AbstractGameMapActivity {
 	}
 	
 	 
+	private void putHeroOnScreen(OverlayItem [] hero) {
+		// add hero
+		for (int i=0; i<1 ;i++) {
+		   	itemizedOverlay2.addOverlay(hero[i]);
+		}
+		
+		mapOverlays.add(itemizedOverlay2);
+	}
+
+
+	private void putWaypointsOnScreen() {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+	private void putPowerupsOnScreen(OverlayItem[] powerups) {
+		// add powerups
+				for (int i=0; i<3 ;i++) {
+		        	itemizedOverlay3.addOverlay(powerups[i]);
+		        }
+		        
+		        mapOverlays.add(itemizedOverlay3);
+	}
+
+
+	private void putEnemiesOnScreen(OverlayItem [] enemy) {
+		// add enemies
+		for (int i=0; i<3 ;i++) {
+        	itemizedOverlay1.addOverlay(enemy[i]);
+        }
+        
+        mapOverlays.add(itemizedOverlay1);
+	}
+
+
 	//when you push the s key it will go to satellite view and back
 	public boolean onKeyDown(int keyCode, KeyEvent e){
         if(keyCode == KeyEvent.KEYCODE_S){
