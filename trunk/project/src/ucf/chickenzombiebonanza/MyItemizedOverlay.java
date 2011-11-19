@@ -60,4 +60,6 @@ public class MyItemizedOverlay extends ItemizedOverlay<OverlayItem> {
     public int size() {
         return myOverlays.size();
     }
+
+	
 }
