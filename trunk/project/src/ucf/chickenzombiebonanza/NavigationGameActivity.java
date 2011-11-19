@@ -34,11 +34,16 @@ import ucf.chickenzombiebonanza.game.GameStateEnum;
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapController;
 import com.google.android.maps.MapView;
+import com.google.android.maps.MyLocationOverlay;
 import com.google.android.maps.Overlay;
 import com.google.android.maps.OverlayItem;
+import android.content.Context;
 
 import android.graphics.drawable.Drawable;
+import android.location.Location;
+import android.location.LocationManager;
 import android.os.Bundle;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -55,16 +60,22 @@ public class NavigationGameActivity extends AbstractGameMapActivity {
 	private MapController mapController;
 	private MapView mapView;
 	
-	private static double lat;
-    private static double lon;
+	private static double lat=28.53551;
+    private static double lon=-81.382256;
+    private static double lat2=28.53561;
+    private static double lon2=-81.382266;
 	private List<Overlay> mapOverlays;
     private Drawable drawable1;
     private MyItemizedOverlay itemizedOverlay1;
     private boolean enemyIsDisplayed = false;
     private int latE6;
     private int lonE6;
+    private int latE61;
+    private int lonE62;
     private MapController mapControl;
     private GeoPoint gp;
+    private GeoPoint gp1;
+    private GeoPoint gp2;
     private Button overlayButton;
     
 
@@ -72,58 +83,88 @@ public class NavigationGameActivity extends AbstractGameMapActivity {
 	public void onCreate(Bundle bundle) {
 		super.onCreate(bundle);
 		setContentView(R.layout.main);
-
+		//setContentView(R.layout.mapme);
+		
 		// create a map view
 		mapView = (MapView) findViewById(R.id.mapview);
 		mapView.setBuiltInZoomControls(true);
 		mapView.setSatellite(false);
 
 		mapController = mapView.getController();
-		mapController.setZoom(14); // Zoom 1 is world view
+		mapController.setZoom(21); // Zoom 1 is world view
 		
 		 // Convert lat/long in degrees into integers in microdegrees
         latE6 =  (int) (lat*1e6);
         lonE6 = (int) (lon*1e6);
         
-        gp = new GeoPoint(latE6, lonE6);
-        //mapControl.animateTo(gp);  
+        latE61 =  (int) (lat2*1e6);
+        lonE62 = (int) (lon2*1e6);
         
-       /*
+       
+        
+       
+        
+        //gp = new GeoPoint(latE6, lonE6);       
+        //mapController.animateTo(gp);
+        
+        
+        // Set up location manager for determining present location of phone
+        LocationManager locman;
+        Location loc;
+        String provider = LocationManager.GPS_PROVIDER;        
+        locman = (LocationManager)getSystemService(Context.LOCATION_SERVICE); 
+        loc = locman.getLastKnownLocation(provider);
+        lat = loc.getLatitude();
+        lon = loc.getLongitude();
+        GeoPoint newPoint = new GeoPoint((int)(lat*1e6),(int)(lon*1e6)); 	   
+        mapController.animateTo(newPoint);
+        
+        
+        //if want satellite view this allows us to zoom in more as we will need for the map
+        mapView.setSatellite(!mapView.isSatellite());
+        
+        
+       
+        
         
         
 
-     // Button to control enemy overlay
-        overlayButton = (Button)findViewById(R.id.doOverlay);
-        overlayButton.setOnClickListener(new OnClickListener(){      
-            public void onClick(View v) {	
-            	setOverlay1();
-            }
-            public void setOverlay1(){	
-                int enemyLength = enemy.length;
-                // Create itemizedOverlay2 if it doesn't exist and display all three items
-                if(! enemyIsDisplayed){
-                mapOverlays = mapView.getOverlays();	
-                //drawable1 = this.getClass().getResources().getDrawable(R.drawable.chickendrawing); 
-                itemizedOverlay1 = new MyItemizedOverlay(drawable1); 
-                // Display all three items at once
-                for(int i=0; i<3; i++){
-                   // itemizedOverlay1.addOverlayenemy[i]);
-                }
-                mapOverlays.add(itemizedOverlay1);
-                //enemyIsDisplayed = !enemyIsDisplayed;
-                // Remove each item successively with button clicks
-                } else {			
-                    itemizedOverlay1.removeItem(itemizedOverlay1.size()-1);
-                    if((itemizedOverlay1.size() < 1))  enemyIsDisplayed = false;
-                }    
-                // Added symbols will be displayed when map is redrawn so force redraw now
-                mapView.postInvalidate(); 
-            }
-         
-        });
+        //arraylist of posible enemy postions
+        OverlayItem [] enemy = {
+            new OverlayItem( new GeoPoint(latE6, lonE6), "enemy 1", "more details"), 
+            new OverlayItem( new GeoPoint(latE61,lonE62), "enemy 1", "more details") 
+             
+        };
+        
+        mapOverlays = mapView.getOverlays();
+        drawable1 = this.getResources().getDrawable(R.drawable.chickendrawing2);
+        itemizedOverlay1 = new MyItemizedOverlay(drawable1);
+          
+        for (int i=0; i<2 ;i++) {
+        	itemizedOverlay1.addOverlay(enemy[i]);
+        }
+        mapOverlays.add(itemizedOverlay1);
+        
+             
+        
+        //this will refresh map i think?
+        mapView.postInvalidate();
+        
+      
+        
 
-			*/
 	}
+	
+	 
+	//when you push the s key it will go to satellite view and back
+	public boolean onKeyDown(int keyCode, KeyEvent e){
+        if(keyCode == KeyEvent.KEYCODE_S){
+            mapView.setSatellite(!mapView.isSatellite());
+            return true;
+        
+        }
+            return(super.onKeyDown(keyCode, e));
+    }
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
@@ -131,6 +172,8 @@ public class NavigationGameActivity extends AbstractGameMapActivity {
 	    inflater.inflate(R.menu.navigation_menu, menu);
 	    return true;
 	}
+	
+	
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
