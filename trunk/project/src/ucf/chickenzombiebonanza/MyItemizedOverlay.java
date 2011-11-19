@@ -1,6 +1,8 @@
 package ucf.chickenzombiebonanza;
 
 import java.util.ArrayList;
+
+import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.widget.Toast;
 import com.google.android.maps.GeoPoint;
@@ -11,6 +13,7 @@ public class MyItemizedOverlay extends ItemizedOverlay<OverlayItem> {
         
     private ArrayList<OverlayItem> myOverlays ;
 	protected int[] addOverlayenemy;
+	private Context context;
 
     public MyItemizedOverlay(Drawable defaultMarker) {
         super(boundCenterBottom(defaultMarker));
@@ -51,7 +54,7 @@ public class MyItemizedOverlay extends ItemizedOverlay<OverlayItem> {
         String toast = "Title: "+myOverlays.get(i).getTitle();
         toast += "\nText: "+myOverlays.get(i).getSnippet();
         toast += 	"\nSymbol coordinates: Lat = "+lat+" Lon = "+lon+" (microdegrees)";
-        //Toast.makeText(NavigationGameActivity.context, toast, Toast.LENGTH_LONG).show();
+        //Toast.makeText(context, toast, Toast.LENGTH_LONG).show();
         return(true);
     }
 
