@@ -69,9 +69,11 @@ public class NavigationGameActivity extends AbstractGameMapActivity {
     private Drawable drawable1;
     private Drawable drawable2;
     private Drawable drawable3;
+    private Drawable drawable4;
     private MyItemizedOverlay itemizedOverlay1;
     private MyItemizedOverlay itemizedOverlay2;
     private MyItemizedOverlay itemizedOverlay3;
+    private MyItemizedOverlay itemizedOverlay4;
     private boolean shootingGameStart = false;
     private boolean enemyIsDisplayed = false;
     private int latE6;
@@ -152,10 +154,19 @@ public class NavigationGameActivity extends AbstractGameMapActivity {
                  
         };
         
+        OverlayItem [] waypoints = {
+        		new OverlayItem( new GeoPoint((int) (4*1e6), (int)(7*1e6+9)), "waypoint 1", "more details"), 
+                new OverlayItem( new GeoPoint(2*latE61,4*lonE62), "waypoint 2", "more details"),
+                new OverlayItem( new GeoPoint((int)(lat+2*1e6),(int)(lon+3*1e6)), "waypoint 3", "more details")
+                     
+            };
+        
         OverlayItem [] hero = {
         	new OverlayItem( new GeoPoint((int)(lat*1e6),(int)(lon*1e6)), "hero 1", "more details")
                  
         };
+        
+        
         mapOverlays = mapView.getOverlays();
         drawable1 = this.getResources().getDrawable(R.drawable.chickendrawing2);
         itemizedOverlay1 = new MyItemizedOverlay(drawable1);
@@ -163,11 +174,14 @@ public class NavigationGameActivity extends AbstractGameMapActivity {
         itemizedOverlay2 = new MyItemizedOverlay(drawable2);
         drawable3 = this.getResources().getDrawable(R.drawable.powerup);
         itemizedOverlay3 = new MyItemizedOverlay(drawable3);
+        drawable4 = this.getResources().getDrawable(R.drawable.waypoint);
+        itemizedOverlay3 = new MyItemizedOverlay(drawable4);
          
         putHeroOnScreen(hero);
         putEnemiesOnScreen(enemy);
         putPowerupsOnScreen(powerups);
-        putWaypointsOnScreen();
+        putWaypointsOnScreen(waypoints);
+        
         
         
              
@@ -191,9 +205,13 @@ public class NavigationGameActivity extends AbstractGameMapActivity {
 	}
 
 
-	private void putWaypointsOnScreen() {
-		// TODO Auto-generated method stub
-		
+	private void putWaypointsOnScreen(OverlayItem[] waypoints) {		
+		// add waypoints
+		for (int i=0; i<3 ;i++) {
+        	itemizedOverlay3.addOverlay(waypoints[i]);
+        }
+        
+        mapOverlays.add(itemizedOverlay3);
 	}
 
 
