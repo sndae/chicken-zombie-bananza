@@ -33,6 +33,7 @@ import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -42,6 +43,8 @@ import ucf.chickenzombiebonanza.common.sensor.OrientationListener;
 import ucf.chickenzombiebonanza.R;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
@@ -54,8 +57,10 @@ public class ShootingGameGLES20Renderer implements GLSurfaceView.Renderer, Orien
 
     private int simpleProgram, billboardProgram;
     private int mvpMatrixSimpleHandle, projMatrixBillboardHandle, viewMatrixBillboardHandle, modelMatrixBillboardHandle;
+    private int samplerBillboardHandle;
     private int positionSimpleHandle, positionBillboardHandle;
     private int colorSimpleHandle, colorBillboardHandle;
+    private int textureBillboardHandle;
     
     private float[] mMVPMatrix = new float[16];
     private float[] mVMatrix = new float[16];
@@ -63,12 +68,155 @@ public class ShootingGameGLES20Renderer implements GLSurfaceView.Renderer, Orien
     
     private int numPoints = 0;
 
-    private FloatBuffer floorVertexBuffer, floorColorBuffer, billboardVertexBuffer, billboardColorBuffer;
+    private FloatBuffer floorVertexBuffer, floorColorBuffer, billboardVertexBuffer, billboardColorBuffer, billboardTextureBuffer;
+    
+    int[] textures = new int[1];
     
     private final Context shootingGameContext;
     
     public ShootingGameGLES20Renderer(Context shootingGameContext) {
         this.shootingGameContext = shootingGameContext;
+    }
+    
+    private int loadShaderFromFile(int type, int resourceId) {
+        
+        InputStream is = shootingGameContext.getResources().openRawResource(resourceId);
+        BufferedReader br = new BufferedReader(new InputStreamReader(is));
+        
+        StringBuilder shaderCode = new StringBuilder();
+        String readLine;
+        
+        try {
+            while ((readLine = br.readLine()) != null) {
+                shaderCode.append(readLine);
+                shaderCode.append('\n');
+            }
+        } catch (IOException e) {
+        }
+
+        // create a vertex shader type (GLES20.GL_VERTEX_SHADER)
+        // or a fragment shader type (GLES20.GL_FRAGMENT_SHADER)
+        int shader = GLES20.glCreateShader(type);
+        
+        // add the source code to the shader and compile it
+        GLES20.glShaderSource(shader, shaderCode.toString());
+        GLES20.glCompileShader(shader);
+
+        return shader;
+    }
+    
+    private static void gluPerspective(float[] matrix, float fovy, float aspect, float zNear, float zFar) {
+        float top = zNear * (float) Math.tan(fovy * (Math.PI / 360.0));
+        float bottom = -top;
+        float left = bottom * aspect;
+        float right = top * aspect;
+        Matrix.frustumM(matrix, 0, left, right, bottom, top, zNear, zFar); 
+    }
+    
+    private void initFloor() {
+        
+        float floorVertexArray[] = new float[]{
+              0.0f,   0.0f, -1.0f, 1.0f,
+              0.0f,  10.0f, -1.0f, 1.0f,
+             10.0f,   0.0f, -1.0f, 1.0f,
+              0.0f, -10.0f, -1.0f, 1.0f,
+            -10.0f,   0.0f, -1.0f, 1.0f,
+              0.0f,  10.0f, -1.0f, 1.0f,
+        };
+
+        ByteBuffer vbb = ByteBuffer.allocateDirect(floorVertexArray.length * 4);
+        vbb.order(ByteOrder.nativeOrder());
+        floorVertexBuffer = vbb.asFloatBuffer();
+        floorVertexBuffer.put(floorVertexArray);
+        floorVertexBuffer.position(0);
+
+        float floorColorArray[] = new float[]{
+            0.2f, 0.6f, 0.0f, 1.0f,
+            0.2f, 0.6f, 0.0f, 0.0f,
+            0.2f, 0.6f, 0.0f, 0.0f,
+            0.2f, 0.6f, 0.0f, 0.0f,
+            0.2f, 0.6f, 0.0f, 0.0f,
+            0.2f, 0.6f, 0.0f, 0.0f,
+        };
+
+        ByteBuffer cbb = ByteBuffer.allocateDirect(floorColorArray.length * 4);
+        cbb.order(ByteOrder.nativeOrder());
+        floorColorBuffer = cbb.asFloatBuffer();
+        floorColorBuffer.put(floorColorArray);
+        floorColorBuffer.position(0);
+        
+        numPoints = 6;
+    }
+    
+    private void initBillboard() {
+        float billboardVertexArray[] = new float[]{
+            0.0f, 0.0f, 0.0f, 1.0f,
+            0.0f, 0.0f, 0.5f, 1.0f,
+            0.0f, 0.5f, 0.0f, 1.0f,
+            0.0f, 0.5f, 0.5f, 1.0f,
+      };
+        
+        ByteBuffer vbb = ByteBuffer.allocateDirect(billboardVertexArray.length * 4);
+        vbb.order(ByteOrder.nativeOrder());
+        billboardVertexBuffer = vbb.asFloatBuffer();
+        billboardVertexBuffer.put(billboardVertexArray);
+        billboardVertexBuffer.position(0);
+
+        float billboardColorArray[] = new float[]{
+            1.0f, 1.0f, 1.0f, 1.0f,
+            1.0f, 1.0f, 1.0f, 1.0f,
+            1.0f, 1.0f, 1.0f, 1.0f,
+            1.0f, 1.0f, 1.0f, 1.0f,
+        };
+
+        ByteBuffer cbb = ByteBuffer.allocateDirect(billboardColorArray.length * 4);
+        cbb.order(ByteOrder.nativeOrder());
+        billboardColorBuffer = cbb.asFloatBuffer();
+        billboardColorBuffer.put(billboardColorArray);
+        billboardColorBuffer.position(0);
+        
+        float billboardTextureArray[] = new float[]{
+            1.0f, 1.0f,
+            1.0f, 0.0f,
+            0.0f, 1.0f,
+            0.0f, 0.0f,
+        };
+
+        ByteBuffer tbb = ByteBuffer.allocateDirect(billboardTextureArray.length * 4);
+        tbb.order(ByteOrder.nativeOrder());
+        billboardTextureBuffer = tbb.asFloatBuffer();
+        billboardTextureBuffer.put(billboardTextureArray);
+        billboardTextureBuffer.position(0);
+
+        Bitmap bitmap = BitmapFactory.decodeResource(shootingGameContext.getResources(), R.drawable.chickenimagetexture);
+        
+        GLES20.glGenTextures(1, textures, 0);
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textures[0]);
+        
+        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(bitmap.getWidth() * bitmap.getHeight() * 4);
+        byteBuffer.order(ByteOrder.BIG_ENDIAN);
+        IntBuffer ib = byteBuffer.asIntBuffer();
+
+        int[] pixels = new int[bitmap.getWidth() * bitmap.getHeight()];
+        bitmap.getPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
+        for(int i=0; i<pixels.length; i++){
+            ib.put(pixels[i] << 8 | pixels[i] >>> 24);
+        }
+
+        bitmap.recycle();
+
+        byteBuffer.position(0);
+
+        GLES20.glTexImage2D ( GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA, bitmap.getWidth(), bitmap.getHeight(), 0,
+                              GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, byteBuffer );
+
+        GLES20.glTexParameteri ( GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR );
+        GLES20.glTexParameteri ( GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR );
+        GLES20.glTexParameteri ( GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE );
+        GLES20.glTexParameteri ( GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE );
+        
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0);
+
     }
 
     @Override
@@ -100,8 +248,10 @@ public class ShootingGameGLES20Renderer implements GLSurfaceView.Renderer, Orien
         projMatrixBillboardHandle = GLES20.glGetUniformLocation(billboardProgram, "projMat");
         viewMatrixBillboardHandle = GLES20.glGetUniformLocation(billboardProgram, "viewMat");
         modelMatrixBillboardHandle = GLES20.glGetUniformLocation(billboardProgram, "modelMat");
+        samplerBillboardHandle = GLES20.glGetUniformLocation(billboardProgram, "textureSampler");
         positionBillboardHandle = GLES20.glGetAttribLocation(billboardProgram, "vPosition");
         colorBillboardHandle = GLES20.glGetAttribLocation(billboardProgram, "vColor");
+        textureBillboardHandle = GLES20.glGetAttribLocation(billboardProgram, "vTextureCoord");
         
         initFloor();
         
@@ -141,13 +291,21 @@ public class ShootingGameGLES20Renderer implements GLSurfaceView.Renderer, Orien
         GLES20.glUniformMatrix4fv(projMatrixBillboardHandle, 1, false, mProjMatrix, 0);
         GLES20.glUniformMatrix4fv(viewMatrixBillboardHandle, 1, false, mVMatrix, 0);
         GLES20.glUniformMatrix4fv(modelMatrixBillboardHandle, 1, false, modelMatrix, 0);
+        GLES20.glUniform1i(samplerBillboardHandle, 0);
         
         GLES20.glVertexAttribPointer(positionBillboardHandle, 4, GLES20.GL_FLOAT, false, 16, billboardVertexBuffer);
         GLES20.glEnableVertexAttribArray(positionBillboardHandle);
         GLES20.glVertexAttribPointer(colorBillboardHandle, 4, GLES20.GL_FLOAT, false, 16, billboardColorBuffer);
         GLES20.glEnableVertexAttribArray(colorBillboardHandle);
+        GLES20.glVertexAttribPointer(textureBillboardHandle, 2, GLES20.GL_FLOAT, false, 8, billboardTextureBuffer);
+        GLES20.glEnableVertexAttribArray(textureBillboardHandle);
+        
+        GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textures[0]);
 
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
+        
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0);
         
         GLES20.glDisable(GLES20.GL_BLEND);
     }
@@ -164,14 +322,6 @@ public class ShootingGameGLES20Renderer implements GLSurfaceView.Renderer, Orien
         
         GLES20.glUseProgram(0);
     }
-    
-    private static void gluPerspective(float[] matrix, float fovy, float aspect, float zNear, float zFar) {
-        float top = zNear * (float) Math.tan(fovy * (Math.PI / 360.0));
-        float bottom = -top;
-        float left = bottom * aspect;
-        float right = top * aspect;
-        Matrix.frustumM(matrix, 0, left, right, bottom, top, zNear, zFar); 
-    }
 
 	@Override
 	public void onSurfaceChanged(GL10 unused, int width, int height) {
@@ -181,96 +331,6 @@ public class ShootingGameGLES20Renderer implements GLSurfaceView.Renderer, Orien
         
 		gluPerspective(mProjMatrix, 45.0f, ratio, 0.9f, 20.0f);
 	}
-	
-    private int loadShaderFromFile(int type, int resourceId) {
-        
-        InputStream is = shootingGameContext.getResources().openRawResource(resourceId);
-        BufferedReader br = new BufferedReader(new InputStreamReader(is));
-        
-        StringBuilder shaderCode = new StringBuilder();
-        String readLine;
-        
-        try {
-            while ((readLine = br.readLine()) != null) {
-                shaderCode.append(readLine);
-                shaderCode.append('\n');
-            }
-        } catch (IOException e) {
-        }
-
-        // create a vertex shader type (GLES20.GL_VERTEX_SHADER)
-        // or a fragment shader type (GLES20.GL_FRAGMENT_SHADER)
-        int shader = GLES20.glCreateShader(type);
-        
-        // add the source code to the shader and compile it
-        GLES20.glShaderSource(shader, shaderCode.toString());
-        GLES20.glCompileShader(shader);
-
-        return shader;
-    }
-
-    private void initFloor() {
-        
-        float floorVertexArray[] = new float[]{
-              0.0f,   0.0f, -1.0f, 1.0f,
-              0.0f,  10.0f, -1.0f, 1.0f,
-             10.0f,   0.0f, -1.0f, 1.0f,
-              0.0f, -10.0f, -1.0f, 1.0f,
-            -10.0f,   0.0f, -1.0f, 1.0f,
-              0.0f,  10.0f, -1.0f, 1.0f,
-        };
-
-        ByteBuffer vbb = ByteBuffer.allocateDirect(floorVertexArray.length * 4);
-        vbb.order(ByteOrder.nativeOrder());
-        floorVertexBuffer = vbb.asFloatBuffer();
-        floorVertexBuffer.put(floorVertexArray);
-        floorVertexBuffer.position(0);
-
-        float floorColorArray[] = new float[]{
-            0.2f, 0.6f, 0.0f, 1.0f,
-            0.2f, 0.6f, 0.0f, 0.0f,
-            0.2f, 0.6f, 0.0f, 0.0f,
-            0.2f, 0.6f, 0.0f, 0.0f,
-            0.2f, 0.6f, 0.0f, 0.0f,
-            0.2f, 0.6f, 0.0f, 0.0f,
-        };
-
-        ByteBuffer cbb = ByteBuffer.allocateDirect(floorColorArray.length * 4);
-        cbb.order(ByteOrder.nativeOrder());
-        floorColorBuffer = cbb.asFloatBuffer();
-        floorColorBuffer.put(floorColorArray);
-        floorColorBuffer.position(0);
-        
-        numPoints = 6;
-    }
-    
-    private void initBillboard() {
-        float billboardVertexArray[] = new float[]{
-            0.0f, 0.0f, 0.0f, 1.0f,
-            0.0f, 0.0f, 1.0f, 1.0f,
-            0.0f, 1.0f, 0.0f, 1.0f,
-            0.0f, 1.0f, 1.0f, 1.0f,
-      };
-        
-        ByteBuffer vbb = ByteBuffer.allocateDirect(billboardVertexArray.length * 4);
-        vbb.order(ByteOrder.nativeOrder());
-        billboardVertexBuffer = vbb.asFloatBuffer();
-        billboardVertexBuffer.put(billboardVertexArray);
-        billboardVertexBuffer.position(0);
-
-        float billboardColorArray[] = new float[]{
-            1.0f, 1.0f, 1.0f, 1.0f,
-            1.0f, 1.0f, 1.0f, 1.0f,
-            1.0f, 1.0f, 1.0f, 1.0f,
-            1.0f, 1.0f, 1.0f, 1.0f,
-        };
-
-        ByteBuffer cbb = ByteBuffer.allocateDirect(billboardColorArray.length * 4);
-        cbb.order(ByteOrder.nativeOrder());
-        billboardColorBuffer = cbb.asFloatBuffer();
-        billboardColorBuffer.put(billboardColorArray);
-        billboardColorBuffer.position(0);
-    }
 
     @Override
     public void receiveOrientationUpdate(LocalOrientation orientation) {

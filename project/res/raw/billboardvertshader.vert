@@ -4,8 +4,10 @@ uniform mat4 modelMat;
 
 attribute vec4 vPosition;
 attribute vec4 vColor;
+attribute vec2 vTextureCoord;
 
 varying vec4 fragColor;
+varying vec2 textCoord;
 
 void main()
 {
@@ -20,6 +22,8 @@ void main()
     clipRotation[1][1] = cos(angle);
     
     fragColor = vColor;
+    
+    textCoord = vTextureCoord;
     
     gl_Position = projMat * viewMat * modelMat * clipRotation * vPosition;
 }
