@@ -45,6 +45,7 @@ import android.content.Context;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
+import android.util.Log;
 
 /**
  * 
@@ -52,10 +53,9 @@ import android.opengl.Matrix;
 public class ShootingGameGLES20Renderer implements GLSurfaceView.Renderer, OrientationListener {
 
     private int simpleProgram, billboardProgram;
-    private int mvpMatrixSimpleHandle, projMatrixBillboardHandle, viewMatrixBillboardHandle;
+    private int mvpMatrixSimpleHandle, projMatrixBillboardHandle, viewMatrixBillboardHandle, modelMatrixBillboardHandle;
     private int positionSimpleHandle, positionBillboardHandle;
     private int colorSimpleHandle, colorBillboardHandle;
-    private int objectPositionBillboardHandle;
     
     private float[] mMVPMatrix = new float[16];
     private float[] mVMatrix = new float[16];
@@ -82,7 +82,7 @@ public class ShootingGameGLES20Renderer implements GLSurfaceView.Renderer, Orien
         GLES20.glAttachShader(simpleProgram, simpleVertexShader); // add the vertex shader to program
         GLES20.glAttachShader(simpleProgram, simpleFragmentShader); // add the fragment shader to program
         GLES20.glLinkProgram(simpleProgram); // creates OpenGL program executables
-        
+                
         int billboardVertexShader = loadShaderFromFile(GLES20.GL_VERTEX_SHADER, R.raw.billboardvertshader);
         int billboardFragmentShader = loadShaderFromFile(GLES20.GL_FRAGMENT_SHADER, R.raw.billboardfragshader);
         
@@ -91,13 +91,15 @@ public class ShootingGameGLES20Renderer implements GLSurfaceView.Renderer, Orien
         GLES20.glAttachShader(billboardProgram, billboardFragmentShader);
         GLES20.glLinkProgram(billboardProgram);
         
+        Log.d("Shader",GLES20.glGetShaderInfoLog(billboardVertexShader));
+        
         mvpMatrixSimpleHandle = GLES20.glGetUniformLocation(simpleProgram, "uMVPMatrix");
         positionSimpleHandle = GLES20.glGetAttribLocation(simpleProgram, "vPosition");
         colorSimpleHandle = GLES20.glGetAttribLocation(simpleProgram, "vColor");
         
         projMatrixBillboardHandle = GLES20.glGetUniformLocation(billboardProgram, "projMat");
         viewMatrixBillboardHandle = GLES20.glGetUniformLocation(billboardProgram, "viewMat");
-        objectPositionBillboardHandle = GLES20.glGetUniformLocation(billboardProgram, "objectPos");
+        modelMatrixBillboardHandle = GLES20.glGetUniformLocation(billboardProgram, "modelMat");
         positionBillboardHandle = GLES20.glGetAttribLocation(billboardProgram, "vPosition");
         colorBillboardHandle = GLES20.glGetAttribLocation(billboardProgram, "vColor");
         
@@ -126,12 +128,19 @@ public class ShootingGameGLES20Renderer implements GLSurfaceView.Renderer, Orien
     private void renderBillboard() {
         
         GLES20.glEnable(GLES20.GL_BLEND);
-        GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
+        GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA);
+        
+        float[] modelMatrix = new float[]{
+        		1.0f, 0.0f,  0.0f, 0.0f,
+        		0.0f, 1.0f,  0.0f, 0.0f,
+        		0.0f, 0.0f,  1.0f, 0.0f,
+        		0.0f, 3.0f, -1.0f, 1.0f
+        };
         
         GLES20.glUseProgram(billboardProgram);
         GLES20.glUniformMatrix4fv(projMatrixBillboardHandle, 1, false, mProjMatrix, 0);
         GLES20.glUniformMatrix4fv(viewMatrixBillboardHandle, 1, false, mVMatrix, 0);
-        GLES20.glUniform4f(objectPositionBillboardHandle, 8f, 0.5f, -1f, 1f);
+        GLES20.glUniformMatrix4fv(modelMatrixBillboardHandle, 1, false, modelMatrix, 0);
         
         GLES20.glVertexAttribPointer(positionBillboardHandle, 4, GLES20.GL_FLOAT, false, 16, billboardVertexBuffer);
         GLES20.glEnableVertexAttribArray(positionBillboardHandle);
@@ -148,10 +157,10 @@ public class ShootingGameGLES20Renderer implements GLSurfaceView.Renderer, Orien
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
 
         Matrix.multiplyMM(mMVPMatrix, 0, mProjMatrix, 0, mVMatrix, 0);
-
-        renderBillboard();
         
         renderFloor();
+        
+        renderBillboard();
         
         GLES20.glUseProgram(0);
     }
@@ -237,10 +246,10 @@ public class ShootingGameGLES20Renderer implements GLSurfaceView.Renderer, Orien
     
     private void initBillboard() {
         float billboardVertexArray[] = new float[]{
-            8.0f, 0.0f, -1.0f, 1.0f,
-            8.0f, 0.0f,  4.0f, 1.0f,
-            8.0f, 1.0f, -1.0f, 1.0f,
-            8.0f, 1.0f,  4.0f, 1.0f,
+            0.0f, 0.0f, 0.0f, 1.0f,
+            0.0f, 0.0f, 1.0f, 1.0f,
+            0.0f, 1.0f, 0.0f, 1.0f,
+            0.0f, 1.0f, 1.0f, 1.0f,
       };
         
         ByteBuffer vbb = ByteBuffer.allocateDirect(billboardVertexArray.length * 4);
