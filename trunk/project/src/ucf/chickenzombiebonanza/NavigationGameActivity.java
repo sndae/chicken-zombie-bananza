@@ -89,6 +89,11 @@ public class NavigationGameActivity extends AbstractGameMapActivity {
     private Button overlayButton;
     private Context context;
     private String testNum = "8888.88";
+    private int level;
+    private double multiplier1a = 1.000001;
+    private double multiplier1b = 1.000002;
+    private double multiplier1c = 1.000003;
+    private double multiplier1d = 1.000004;
     
     
 
@@ -126,32 +131,36 @@ public class NavigationGameActivity extends AbstractGameMapActivity {
         mapView.setSatellite(!mapView.isSatellite());
         
         //need to make enemies appear in range of center point then move to it
-        
+        level = 3;
         
         
 
         //arraylist of posible enemy postions
         OverlayItem [] enemy = {
-            new OverlayItem( new GeoPoint((int)((1.000002*lat*1e6)),(int)((lon*1e6))), "enemy 1", "more details"), 
-            new OverlayItem( new GeoPoint((int)((lat*1e6)),(int)((1.000001*lon*1e6))), "enemy 1", "more details"),
-            new OverlayItem( new GeoPoint((int)((lat/1.000002*1e6)),(int)((lon*1e6))), "enemy 1", "more details"),
-            new OverlayItem( new GeoPoint((int)((lat*1e6)),(int)(((lon/1.000001)*1e6))), "enemy 1", "more details")
+            new OverlayItem( new GeoPoint((int)((multiplier1b*lat*1e6)),(int)((lon*1e6))), "enemy 1", "more details"), 
+            new OverlayItem( new GeoPoint((int)((lat*1e6)),(int)((multiplier1a*lon*1e6))), "enemy 1", "more details"),
+            new OverlayItem( new GeoPoint((int)((lat/multiplier1b*1e6)),(int)((lon*1e6))), "enemy 1", "more details"),
+            new OverlayItem( new GeoPoint((int)((lat*1e6)),(int)(((lon/multiplier1a)*1e6))), "enemy 1", "more details"),
+            new OverlayItem( new GeoPoint((int)((multiplier1d*lat*1e6)),(int)((lon*1e6))), "enemy 1", "more details"), 
+            new OverlayItem( new GeoPoint((int)((lat*1e6)),(int)((multiplier1c*lon*1e6))), "enemy 1", "more details"),
+            new OverlayItem( new GeoPoint((int)((lat/multiplier1d*1e6)),(int)((lon*1e6))), "enemy 1", "more details"),
+            new OverlayItem( new GeoPoint((int)((lat*1e6)),(int)(((lon/multiplier1c)*1e6))), "enemy 1", "more details")
              
         };
         
         OverlayItem [] powerups = {
-        		new OverlayItem( new GeoPoint((int)((1.000003*lat*1e6)),(int)((lon*1e6))), "enemy 1", "more details"), 
-                new OverlayItem( new GeoPoint((int)((lat*1e6)),(int)((1.000002*lon*1e6))), "enemy 1", "more details"),
-                new OverlayItem( new GeoPoint((int)((lat/1.000003*1e6)),(int)((lon*1e6))), "enemy 1", "more details"),
-                new OverlayItem( new GeoPoint((int)((lat*1e6)),(int)(((lon/1.000002)*1e6))), "enemy 1", "more details")
+        		new OverlayItem( new GeoPoint((int)((multiplier1c*lat*1e6)),(int)((lon*1e6))), "enemy 1", "more details"), 
+                new OverlayItem( new GeoPoint((int)((lat*1e6)),(int)((multiplier1b*lon*1e6))), "enemy 1", "more details"),
+                new OverlayItem( new GeoPoint((int)((lat/multiplier1c*1e6)),(int)((lon*1e6))), "enemy 1", "more details"),
+                new OverlayItem( new GeoPoint((int)((lat*1e6)),(int)(((lon/multiplier1b)*1e6))), "enemy 1", "more details")
                  
         };
         
         OverlayItem [] waypoints = {
-        		new OverlayItem( new GeoPoint((int)((1.000004*lat*1e6)),(int)((lon*1e6))), "enemy 1", "more details"), 
-                new OverlayItem( new GeoPoint((int)((lat*1e6)),(int)((1.000003*lon*1e6))), "enemy 1", "more details"),
-                new OverlayItem( new GeoPoint((int)((lat/1.000004*1e6)),(int)((lon*1e6))), "enemy 1", "more details"),
-                new OverlayItem( new GeoPoint((int)((lat*1e6)),(int)(((lon/1.000003)*1e6))), "enemy 1", "more details")
+        		new OverlayItem( new GeoPoint((int)((multiplier1d*lat*1e6)),(int)((lon*1e6))), "enemy 1", "more details"), 
+                new OverlayItem( new GeoPoint((int)((lat*1e6)),(int)((multiplier1c*lon*1e6))), "enemy 1", "more details"),
+                new OverlayItem( new GeoPoint((int)((lat/multiplier1d*1e6)),(int)((lon*1e6))), "enemy 1", "more details"),
+                new OverlayItem( new GeoPoint((int)((lat*1e6)),(int)(((lon/multiplier1c)*1e6))), "enemy 1", "more details")
                      
             };
         
@@ -249,12 +258,31 @@ public class NavigationGameActivity extends AbstractGameMapActivity {
 
 
 	private void putEnemiesOnScreen(OverlayItem [] enemy) {
-		// add enemies
-		for (int i=0; i<4 ;i++) {
-        	itemizedOverlay1.addOverlay(enemy[i]);
-        }
-        enemyIsDisplayed = true;
-        mapOverlays.add(itemizedOverlay1);
+		
+		if (level == 1){
+			// add enemies
+			for (int i=0; i<4 ;i++) {
+				itemizedOverlay1.addOverlay(enemy[i]);
+			}
+			enemyIsDisplayed = true;
+			mapOverlays.add(itemizedOverlay1);
+		}
+		else if (level == 2){
+			// add enemies
+			for (int i=0; i<6 ;i++) {
+				itemizedOverlay1.addOverlay(enemy[i]);
+			}
+			enemyIsDisplayed = true;
+			mapOverlays.add(itemizedOverlay1);
+		}
+		else if (level == 3){
+			// add enemies
+			for (int i=0; i<8 ;i++) {
+				itemizedOverlay1.addOverlay(enemy[i]);
+			}
+			enemyIsDisplayed = true;
+			mapOverlays.add(itemizedOverlay1);
+		}
 	}
 
 
