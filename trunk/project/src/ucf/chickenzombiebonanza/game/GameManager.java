@@ -26,10 +26,6 @@
  */
 package ucf.chickenzombiebonanza.game;
 
-import geotransform.ellipsoids.WE_Ellipsoid;
-import geotransform.transforms.Gcc_To_Gdc_Converter;
-import geotransform.transforms.Gdc_To_Gcc_Converter;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -100,9 +96,6 @@ public class GameManager implements GameSettingsChangeListener {
 		Thread loadThread = new Thread() {
 			@Override
 			public void run() {
-				Gdc_To_Gcc_Converter.Init(new WE_Ellipsoid());
-				Gcc_To_Gdc_Converter.Init(new WE_Ellipsoid());
-
 				while (!loadingScreenDurationMet.get()) {
 					synchronized (this) {
 						try {

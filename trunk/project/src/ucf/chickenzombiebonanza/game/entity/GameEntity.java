@@ -29,6 +29,8 @@ package ucf.chickenzombiebonanza.game.entity;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.util.Log;
+
 import ucf.chickenzombiebonanza.common.GeocentricCoordinate;
 import ucf.chickenzombiebonanza.common.LocalOrientation;
 import ucf.chickenzombiebonanza.common.sensor.OrientationListener;
@@ -113,6 +115,7 @@ public abstract class GameEntity implements PositionListener, OrientationListene
 	
 	public final void registerGameEntityStateListener(GameEntityStateListener listener) {
 		if(!stateListeners.contains(listener)) {
+			Log.d("lol", "added entity state listener");
 			stateListeners.add(listener);
 		}
 	}
