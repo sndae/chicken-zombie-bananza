@@ -28,6 +28,7 @@ package ucf.chickenzombiebonanza.android.sensor;
 
 import geotransform.coords.Gcc_Coord_3d;
 import geotransform.coords.Gdc_Coord_3d;
+import geotransform.ellipsoids.WE_Ellipsoid;
 import geotransform.transforms.Gdc_To_Gcc_Converter;
 import android.content.Context;
 import android.location.Location;
@@ -45,15 +46,16 @@ public class GpsListener extends PositionPublisher implements LocationListener {
 		locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0,
                         0, this);
+        Location currentPosition = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        if(currentPosition != null) {
+        	this.updatePosition(locationToGcc(currentPosition));
+        }
+        
 	}
 
 	@Override
 	public void onLocationChanged(Location location) {
-		Gdc_Coord_3d gdc = new Gdc_Coord_3d(location.getLatitude(),location.getLongitude(),location.getAltitude());
-		Gcc_Coord_3d gcc = new Gcc_Coord_3d();
-		Gdc_To_Gcc_Converter.Convert(gdc, gcc);
-		GeocentricCoordinate geo = new GeocentricCoordinate(gcc.x,gcc.y,gcc.z);
-		this.updatePosition(geo);
+		this.updatePosition(locationToGcc(location));
 	}
 
 	@Override
@@ -69,6 +71,14 @@ public class GpsListener extends PositionPublisher implements LocationListener {
 	@Override
 	public void onStatusChanged(String provider, int status, Bundle extras) {
 		// Do nothing
+	}
+	
+	public static GeocentricCoordinate locationToGcc(Location location) {
+		Gdc_To_Gcc_Converter.Init(new WE_Ellipsoid());
+		Gdc_Coord_3d gdc = new Gdc_Coord_3d(location.getLatitude(),location.getLongitude(),location.getAltitude());
+		Gcc_Coord_3d gcc = new Gcc_Coord_3d();
+		Gdc_To_Gcc_Converter.Convert(gdc, gcc);
+		return new GeocentricCoordinate(gcc.x,gcc.y,gcc.z);
 	}
 
 }

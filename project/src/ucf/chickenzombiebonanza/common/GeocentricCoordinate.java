@@ -60,6 +60,12 @@ public class GeocentricCoordinate {
 		this.z = z;
 	}
 	
+	public GeocentricCoordinate(GeocentricCoordinate coordinate) {
+		this.x = coordinate.getX();
+		this.y = coordinate.getY();
+		this.z = coordinate.getZ();
+	}
+	
 	/**
 	 * Gets the X component of the coordinate.
 	 * 
@@ -160,32 +166,20 @@ public class GeocentricCoordinate {
 	
 	public static GeocentricCoordinate randomPointAround(final GeocentricCoordinate pt, double maxRadius, double minRadius) {
 	    Random generator = new Random();
-	    //TODO: This could be optimized
-	    double x = (((generator.nextDouble() * 2.0) - 1.0)*(maxRadius-minRadius))+minRadius;
-	    double y = (((generator.nextDouble() * 2.0) - 1.0)*(maxRadius-minRadius))+minRadius;
-	    
-	    Log.d("lol", pt + "++");
-	    
-	    Log.d("lol", pt.toVector() + "--");
+	    double angle = generator.nextDouble()*(2.0*Math.PI);
+	    double distance = (generator.nextDouble()*(maxRadius-minRadius))+minRadius;
 	    
 	    Vector3d upVector = pt.toVector().normalize();
 	    
 	    Vector3d surfaceVectorOne = new Vector3d(-upVector.v(),upVector.u(),upVector.w());
 	    Vector3d surfaceVectorTwo = new Vector3d(upVector.w(),upVector.v(),-upVector.u());
 	    
-	    Log.d("lol", surfaceVectorOne + ", " + surfaceVectorTwo);
+	    surfaceVectorOne = surfaceVectorOne.scale(Math.cos(angle));
+	    surfaceVectorTwo = surfaceVectorTwo.scale(Math.sin(angle));
 	    
-	    surfaceVectorOne = surfaceVectorOne.scale(x);
-	    surfaceVectorTwo = surfaceVectorTwo.scale(y);
+	    Vector3d offsetVector = surfaceVectorOne.add(surfaceVectorTwo).scale(distance);
 	    
-	    Log.d("lol", "~" + surfaceVectorOne + ", " + surfaceVectorTwo);
-	    
-	    GeocentricCoordinate randomCoord = pt;
-	    randomCoord.applyOffset(surfaceVectorOne);
-	    randomCoord.applyOffset(surfaceVectorTwo);
-
-	    return randomCoord;
-	    
+	    return pt.applyOffset(offsetVector);	    
 	}
 	
 	@Override

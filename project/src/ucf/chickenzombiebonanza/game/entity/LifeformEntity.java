@@ -72,13 +72,9 @@ public class LifeformEntity extends GameEntity implements HasInventory {
 		return false;
 	}
 
-	/* (non-Javadoc)
-	 * @see ucf.chickenzombiebonanza.game.entity.GameEntity#destroyEntity()
-	 */
 	@Override
 	public void destroyEntity() {
-		// TODO Auto-generated method stub
-		
+		super.destroyEntity();		
 	}
 	
 	

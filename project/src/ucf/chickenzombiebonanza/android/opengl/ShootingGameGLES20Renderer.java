@@ -50,7 +50,6 @@ import android.graphics.BitmapFactory;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
-import android.util.Log;
 
 /**
  * 
@@ -277,7 +276,6 @@ public class ShootingGameGLES20Renderer implements GLSurfaceView.Renderer, Orien
     
     private float[] getModelMatrix(GameEntity entity) {
         GeocentricCoordinate relative = entity.getPosition().relativeTo(shootingGameContext.getGameLocation());
-        Log.d("lol", entity.getPosition() + " " + shootingGameContext.getGameLocation());
         return new float[]{
             1.0f, 0.0f,  0.0f, 0.0f,
             0.0f, 1.0f,  0.0f, 0.0f,

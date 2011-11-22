@@ -45,9 +45,7 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
-import android.os.Looper;
 import android.os.PowerManager;
-import android.util.Log;
 import android.view.Window;
 import android.view.WindowManager;
 
@@ -92,7 +90,6 @@ public class ShootingGameActivity extends AbstractGameActivity implements GameEn
         Thread loadThread = new Thread() {
             @Override
             public void run() {
-                Looper.prepare();
                 while(GameManager.getInstance().getPlayerEntity().getPosition().isZero()) {
                     synchronized(this) {
                         try {
@@ -105,8 +102,6 @@ public class ShootingGameActivity extends AbstractGameActivity implements GameEn
                 dialog.dismiss();
                 shootingGameLocation = GameManager.getInstance().getPlayerEntity().getPosition();
                 
-                Log.d("lol", "got position");
-
                 Timer spawnEnemyTimer = new Timer();
                 spawnEnemyTimer.schedule(new TimerTask() {
 
@@ -119,7 +114,7 @@ public class ShootingGameActivity extends AbstractGameActivity implements GameEn
                         killTimer.schedule(new TimerTask(){
                             @Override
                             public void run() {
-                                newEnemy.destroyEntity();                      
+                                newEnemy.destroyEntity();
                             }}, 5000);                
                     }
                     

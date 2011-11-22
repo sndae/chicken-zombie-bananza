@@ -61,6 +61,10 @@ public class Vector3d {
         return Math.sqrt(Math.pow(u, 2)+Math.pow(v, 2)+Math.pow(w, 2));
     }
     
+    public Vector3d add(Vector3d rhs) {
+    	return new Vector3d(u()+rhs.u(),v()+rhs.v(),w()+rhs.w());
+    }
+    
     public Vector3d scale(double val) {
         return new Vector3d(val*u(),val*v(),val*w());
     }
