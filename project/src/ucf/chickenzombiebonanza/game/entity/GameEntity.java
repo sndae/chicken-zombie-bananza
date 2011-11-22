@@ -32,6 +32,7 @@ import java.util.List;
 import ucf.chickenzombiebonanza.common.GeocentricCoordinate;
 import ucf.chickenzombiebonanza.common.LocalOrientation;
 import ucf.chickenzombiebonanza.common.sensor.OrientationListener;
+import ucf.chickenzombiebonanza.common.sensor.OrientationPublisher;
 import ucf.chickenzombiebonanza.common.sensor.PositionListener;
 import ucf.chickenzombiebonanza.common.sensor.PositionPublisher;
 
@@ -41,11 +42,9 @@ public abstract class GameEntity implements PositionListener, OrientationListene
 	
 	private int id;
 	
-	private GeocentricCoordinate position;
+	private final PositionPublisher positionPublisher;
 	
-	private LocalOrientation orientation;
-	
-	private final PositionPublisher positionPublisher = new PositionPublisher();
+	private final OrientationPublisher orientationPublisher;
 	
 	private final List<GameEntityTagEnum> tags = new ArrayList<GameEntityTagEnum>(1);
 	
@@ -53,27 +52,42 @@ public abstract class GameEntity implements PositionListener, OrientationListene
 	
 	public GameEntity(GeocentricCoordinate position, LocalOrientation orientation, GameEntityTagEnum tag) {
 		this.id = nextAvailableId;
-		this.position = position;
-		this.orientation = orientation;
 		this.tags.add(tag);
+		positionPublisher = new PositionPublisher();
+	    positionPublisher.updatePosition(position);
+		orientationPublisher = new OrientationPublisher();
+	    orientationPublisher.updateOrientation(orientation);
 		
 		nextAvailableId += 1;
 	}
+	
+    public GameEntity(PositionPublisher positionPublisher, OrientationPublisher orientationPublisher, GameEntityTagEnum tag) {
+        this.id = nextAvailableId;
+        this.tags.add(tag);
+        this.positionPublisher = positionPublisher;
+        this.orientationPublisher = orientationPublisher;
+
+        nextAvailableId += 1;
+    }
 	
 	public int getId() {
 		return id;
 	}
 	
 	public GeocentricCoordinate getPosition() {
-		return position;
+	    return positionPublisher.getCurrentPosition();
 	}
 	
 	public LocalOrientation getOrientation() {
-		return orientation;
+	    return orientationPublisher.getCurrentOrientation();
 	}
 	
 	public final PositionPublisher getPositionPublisher() {
-		return positionPublisher;
+	    return positionPublisher;
+	}
+	
+	public final OrientationPublisher getOrientationPublisher() {
+	    return orientationPublisher;
 	}
 	
 	public List<GameEntityTagEnum> getTags() {
@@ -81,16 +95,18 @@ public abstract class GameEntity implements PositionListener, OrientationListene
 	}
 	
 	public final void receivePositionUpdate(GeocentricCoordinate coordinate) {
-		this.position = coordinate;
-		positionPublisher.updatePosition(this.position);
+		positionPublisher.updatePosition(coordinate);
 	}
 	
 	public final void receiveOrientationUpdate(LocalOrientation orientation) {
-		this.orientation = orientation;
+		orientationPublisher.updateOrientation(orientation);
+		orientationPublisher.updateOrientation(getOrientation());
 	}
 	
 	public void destroyEntity() {
-		
+	    for(GameEntityStateListener i: stateListeners) {
+	        i.onGameEntityDestroyed(this);
+	    }		
 	}
 	
 	abstract public void interactWith(GameEntity entity);

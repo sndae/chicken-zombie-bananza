@@ -38,11 +38,13 @@ import java.nio.IntBuffer;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
+import ucf.chickenzombiebonanza.common.GeocentricCoordinate;
 import ucf.chickenzombiebonanza.common.LocalOrientation;
 import ucf.chickenzombiebonanza.common.sensor.OrientationListener;
+import ucf.chickenzombiebonanza.game.entity.GameEntity;
 import ucf.chickenzombiebonanza.R;
+import ucf.chickenzombiebonanza.ShootingGameActivity;
 
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.opengl.GLES20;
@@ -72,9 +74,9 @@ public class ShootingGameGLES20Renderer implements GLSurfaceView.Renderer, Orien
     
     int[] textures = new int[1];
     
-    private final Context shootingGameContext;
+    private final ShootingGameActivity shootingGameContext;
     
-    public ShootingGameGLES20Renderer(Context shootingGameContext) {
+    public ShootingGameGLES20Renderer(ShootingGameActivity shootingGameContext) {
         this.shootingGameContext = shootingGameContext;
     }
     
@@ -239,8 +241,6 @@ public class ShootingGameGLES20Renderer implements GLSurfaceView.Renderer, Orien
         GLES20.glAttachShader(billboardProgram, billboardFragmentShader);
         GLES20.glLinkProgram(billboardProgram);
         
-        Log.d("Shader",GLES20.glGetShaderInfoLog(billboardVertexShader));
-        
         mvpMatrixSimpleHandle = GLES20.glGetUniformLocation(simpleProgram, "uMVPMatrix");
         positionSimpleHandle = GLES20.glGetAttribLocation(simpleProgram, "vPosition");
         colorSimpleHandle = GLES20.glGetAttribLocation(simpleProgram, "vColor");
@@ -275,22 +275,26 @@ public class ShootingGameGLES20Renderer implements GLSurfaceView.Renderer, Orien
         GLES20.glDisable(GLES20.GL_BLEND);
     }
     
+    private float[] getModelMatrix(GameEntity entity) {
+        GeocentricCoordinate relative = entity.getPosition().relativeTo(shootingGameContext.getGameLocation());
+        Log.d("lol", entity.getPosition() + " " + shootingGameContext.getGameLocation());
+        return new float[]{
+            1.0f, 0.0f,  0.0f, 0.0f,
+            0.0f, 1.0f,  0.0f, 0.0f,
+            0.0f, 0.0f,  1.0f, 0.0f,
+            (float)relative.getX(), (float)relative.getY(), -1.0f, 1.0f
+        };
+    }
+    
     private void renderBillboard() {
         
         GLES20.glEnable(GLES20.GL_BLEND);
         GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA);
-        
-        float[] modelMatrix = new float[]{
-        		1.0f, 0.0f,  0.0f, 0.0f,
-        		0.0f, 1.0f,  0.0f, 0.0f,
-        		0.0f, 0.0f,  1.0f, 0.0f,
-        		0.0f, 3.0f, -1.0f, 1.0f
-        };
-        
+                
         GLES20.glUseProgram(billboardProgram);
         GLES20.glUniformMatrix4fv(projMatrixBillboardHandle, 1, false, mProjMatrix, 0);
         GLES20.glUniformMatrix4fv(viewMatrixBillboardHandle, 1, false, mVMatrix, 0);
-        GLES20.glUniformMatrix4fv(modelMatrixBillboardHandle, 1, false, modelMatrix, 0);
+        GLES20.glUniform1i(samplerBillboardHandle, 0);
         GLES20.glUniform1i(samplerBillboardHandle, 0);
         
         GLES20.glVertexAttribPointer(positionBillboardHandle, 4, GLES20.GL_FLOAT, false, 16, billboardVertexBuffer);
@@ -302,8 +306,16 @@ public class ShootingGameGLES20Renderer implements GLSurfaceView.Renderer, Orien
         
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textures[0]);
-
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
+        
+        synchronized (shootingGameContext.getGameEntities()) {        
+            for(GameEntity i : shootingGameContext.getGameEntities()) {
+                float[] modelMatrix = getModelMatrix(i);
+                
+                GLES20.glUniformMatrix4fv(modelMatrixBillboardHandle, 1, false, modelMatrix, 0);
+    
+                GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
+            }
+        }
         
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0);
         
@@ -329,7 +341,7 @@ public class ShootingGameGLES20Renderer implements GLSurfaceView.Renderer, Orien
 		
 		float ratio = (float) width / height;
         
-		gluPerspective(mProjMatrix, 45.0f, ratio, 0.9f, 20.0f);
+		gluPerspective(mProjMatrix, 45.0f, ratio, 0.5f, 20.0f);
 	}
 
     @Override

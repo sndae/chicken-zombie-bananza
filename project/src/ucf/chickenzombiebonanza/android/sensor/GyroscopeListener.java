@@ -58,21 +58,20 @@ public class GyroscopeListener extends OrientationPublisher implements SensorEve
             public void run() {
                 GyroscopeListener.this.broadcastOrientation();
             }
-        }, 0, 100);
-        
-        this.setSensorState(SensorStateEnum.PAUSED);		
+        }, 0, 100);	
+        this.setSensorState(SensorStateEnum.PAUSED);
 	}
-	
-	@Override
-	public void onPause() {
-	    sensorManager.unregisterListener(this);
-	}
-	
+		
 	@Override
 	public void onResume() {
 	    sensorManager.registerListener(this, sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), SensorManager.SENSOR_DELAY_GAME);
 	    sensorManager.registerListener(this, sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD), SensorManager.SENSOR_DELAY_GAME);
 	}
+
+    @Override
+    public void onPause() {
+        sensorManager.unregisterListener(this);
+    }
 
     @Override
     public void onAccuracyChanged(Sensor arg0, int arg1) {

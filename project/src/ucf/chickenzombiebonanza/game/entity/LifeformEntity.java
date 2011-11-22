@@ -25,13 +25,10 @@ public class LifeformEntity extends GameEntity implements HasInventory {
 	private LifeformEntityStateEnum state;
 	
 	public LifeformEntity(PositionPublisher positionPublisher, OrientationPublisher orientationPublisher) {
-		super(positionPublisher.getCurrentPosition(), 
-		    orientationPublisher.getCurrentOrientation(), 
-		    GameEntityTagEnum.LIFEFORM);
+		super(positionPublisher, orientationPublisher, GameEntityTagEnum.LIFEFORM);
 		this.maxHealth = 100;
 		this.currentHealth = 100;
 		this.state = LifeformEntityStateEnum.ALIVE;
-		
 	}
 	
 	public LifeformEntity(int health, LifeformEntityStateEnum status, GeocentricCoordinate position, LocalOrientation orientation){
@@ -39,10 +36,7 @@ public class LifeformEntity extends GameEntity implements HasInventory {
 		this.maxHealth = health;
 		this.currentHealth = health;
 		this.state = status;
-		
-	}
-	
-	
+	}	
 	
 	int getHealth(){
 		return currentHealth;
@@ -77,8 +71,6 @@ public class LifeformEntity extends GameEntity implements HasInventory {
 		// TODO Auto-generated method stub
 		return false;
 	}
-
-
 
 	/* (non-Javadoc)
 	 * @see ucf.chickenzombiebonanza.game.entity.GameEntity#destroyEntity()

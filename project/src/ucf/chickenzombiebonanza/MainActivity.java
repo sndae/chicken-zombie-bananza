@@ -41,9 +41,7 @@ public class MainActivity extends AbstractGameActivity {
         super.onCreate(bundle);
         setContentView(R.layout.loading);
 
-        GyroscopeListener gyroscopeSensor = new GyroscopeListener(this);
-
-        GameManager.getInstance().start(new GpsListener(this), gyroscopeSensor);
+        GameManager.getInstance().start(new GpsListener(this), new GyroscopeListener(this));
     }
 
     @Override

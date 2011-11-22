@@ -61,6 +61,15 @@ public class Vector3d {
         return Math.sqrt(Math.pow(u, 2)+Math.pow(v, 2)+Math.pow(w, 2));
     }
     
+    public Vector3d scale(double val) {
+        return new Vector3d(val*u(),val*v(),val*w());
+    }
+    
+    public Vector3d normalize() {
+        double mag = this.magnitude();
+        return this.scale(1/mag);
+    }
+    
     public String toString() {
         return "Vector3d[" + u + ", " + v + ", " + w + "]";
     }

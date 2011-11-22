@@ -31,6 +31,7 @@ import geotransform.transforms.Gcc_To_Gdc_Converter;
 import geotransform.transforms.Gdc_To_Gcc_Converter;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -43,6 +44,7 @@ import ucf.chickenzombiebonanza.game.entity.GameEntity;
 import ucf.chickenzombiebonanza.game.entity.GameEntityListener;
 import ucf.chickenzombiebonanza.game.entity.GameEntityStateListener;
 import ucf.chickenzombiebonanza.game.entity.GameEntityTagEnum;
+import ucf.chickenzombiebonanza.game.entity.LifeformEntity;
 
 /**
  * 
@@ -60,8 +62,6 @@ public class GameManager implements GameSettingsChangeListener {
 	private final GameSettings gameSettings = new GameSettings();
 	
 	private GameEntity playerEntity = null;
-	
-	private OrientationPublisher playerOrientation;
 
 	public static GameManager getInstance() {
 		if (instance == null) {
@@ -83,7 +83,7 @@ public class GameManager implements GameSettingsChangeListener {
 			final OrientationPublisher orientationPublisher) {
 		updateGameState(GameStateEnum.GAME_LOADING);
 		
-		playerOrientation = orientationPublisher;
+		playerEntity = new LifeformEntity(positionPublisher, orientationPublisher);
 
 		final AtomicBoolean loadingScreenDurationMet = new AtomicBoolean(false);
 
@@ -119,10 +119,10 @@ public class GameManager implements GameSettingsChangeListener {
 		loadThread.start();
 	}
 	
-	public OrientationPublisher getPlayerOrientationPublisher() {
-	    return playerOrientation;
+	public GameEntity getPlayerEntity() {
+	    return playerEntity;
 	}
-
+	
 	/**
 	 * 
 	 * @return
@@ -203,6 +203,13 @@ public class GameManager implements GameSettingsChangeListener {
 	public void registerGameEntityListener(GameEntityListener listener) {
 		gameEntityListeners.add(new GameEntityListenerData(listener));
 	}
+	
+	public void registerGameEntityListener(GameEntityListener listener,
+           GameEntityTagEnum[] filter) {
+	   List<GameEntityTagEnum> filterList = new ArrayList<GameEntityTagEnum>();
+	   Collections.addAll(filterList, filter);
+       gameEntityListeners.add(new GameEntityListenerData(listener, filterList));
+   }
 
 	public void registerGameEntityListener(GameEntityListener listener,
 			List<GameEntityTagEnum> filter) {

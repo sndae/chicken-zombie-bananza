@@ -26,29 +26,48 @@
  */
 package ucf.chickenzombiebonanza;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
+
 import ucf.chickenzombiebonanza.android.opengl.ShootingGameGLES20Renderer;
+import ucf.chickenzombiebonanza.common.GeocentricCoordinate;
+import ucf.chickenzombiebonanza.common.LocalOrientation;
 import ucf.chickenzombiebonanza.game.GameManager;
 import ucf.chickenzombiebonanza.game.GameStateEnum;
+import ucf.chickenzombiebonanza.game.entity.GameEntity;
+import ucf.chickenzombiebonanza.game.entity.GameEntityListener;
+import ucf.chickenzombiebonanza.game.entity.GameEntityTagEnum;
+import ucf.chickenzombiebonanza.game.entity.LifeformEntity;
+import ucf.chickenzombiebonanza.game.entity.LifeformEntityStateEnum;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
+import android.os.Looper;
 import android.os.PowerManager;
+import android.util.Log;
 import android.view.Window;
 import android.view.WindowManager;
 
 /**
  * 
  */
-public class ShootingGameActivity extends AbstractGameActivity {
+public class ShootingGameActivity extends AbstractGameActivity implements GameEntityListener {
 	
+    private final List<GameEntity> gameEntities = new ArrayList<GameEntity>();
+    
 	private GLSurfaceView glView;
 	
 	private ShootingGameGLES20Renderer renderer;
 	
-	private PowerManager.WakeLock wl;
+	private PowerManager.WakeLock wakeLock;
+	
+	private GeocentricCoordinate shootingGameLocation;
 	
 	@Override
-	public void onCreate(Bundle bundle) {
+	protected void onCreate(Bundle bundle) {
 		super.onCreate(bundle);
 		
         requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -57,34 +76,88 @@ public class ShootingGameActivity extends AbstractGameActivity {
         renderer = new ShootingGameGLES20Renderer(this);
         glView = new ShootingGameSurfaceView(this);
         setContentView(glView);
-        
-		GameManager.getInstance().getPlayerOrientationPublisher().registerForOrientationUpdates(renderer);
-		
+        		
 		PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-        wl = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK, "DoNotDimScreen");
+        wakeLock = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK, "DoNotDimScreen");
 	}
+	
+	@Override
+	protected void onStart() {
+	    super.onStart();
+        GameManager.getInstance().getPlayerEntity().getOrientationPublisher().registerForOrientationUpdates(renderer);
+        GameManager.getInstance().registerGameEntityListener(this, new GameEntityTagEnum[]{GameEntityTagEnum.LIFEFORM});
+        
+        
+        final ProgressDialog dialog = ProgressDialog.show(ShootingGameActivity.this, "Waiting", "Waiting for player position...", true);
+        Thread loadThread = new Thread() {
+            @Override
+            public void run() {
+                Looper.prepare();
+                while(GameManager.getInstance().getPlayerEntity().getPosition().isZero()) {
+                    synchronized(this) {
+                        try {
+                            
+                            this.wait(10);
+                        } catch (InterruptedException e) {
+                        }
+                    }
+                }
+                dialog.dismiss();
+                shootingGameLocation = GameManager.getInstance().getPlayerEntity().getPosition();
+                
+                Log.d("lol", "got position");
+
+                Timer spawnEnemyTimer = new Timer();
+                spawnEnemyTimer.schedule(new TimerTask() {
+
+                    @Override
+                    public void run() {
+                        GeocentricCoordinate randomCoordinate = GeocentricCoordinate.randomPointAround(ShootingGameActivity.this.getGameLocation(), 8, 3);
+                        final GameEntity newEnemy = new LifeformEntity(5, LifeformEntityStateEnum.ALIVE, randomCoordinate, new LocalOrientation());
+                        GameManager.getInstance().addGameEntity(newEnemy);
+                        Timer killTimer = new Timer();
+                        killTimer.schedule(new TimerTask(){
+                            @Override
+                            public void run() {
+                                newEnemy.destroyEntity();                      
+                            }}, 5000);                
+                    }
+                    
+                }, 0, 10000);
+                
+            }
+        };
+        
+        loadThread.start();
+
+	}
+	
+    @Override
+    protected void onResume() {
+        super.onResume();
+        glView.onResume();
+        GameManager.getInstance().getPlayerEntity().getOrientationPublisher().resumeSensor();
+        wakeLock.acquire();
+    }
 	
 	@Override
 	protected void onPause() {
 		super.onPause();
 		glView.onPause();
-		GameManager.getInstance().getPlayerOrientationPublisher().pauseSensor();
-		wl.release();
+		GameManager.getInstance().getPlayerEntity().getOrientationPublisher().pauseSensor();
+		wakeLock.release();
 	}
 	
-	@Override
-	protected void onResume() {
-		super.onResume();
-		glView.onResume();
-		GameManager.getInstance().getPlayerOrientationPublisher().resumeSensor();
-		wl.acquire();
-	}
+    @Override
+    protected void onStop() {
+        super.onStop();
+        GameManager.getInstance().unregisterGameEntityListener(this);
+        GameManager.getInstance().getPlayerEntity().getOrientationPublisher().unregisterForOrientationUpdates(renderer);
+    }
 	
 	@Override
-	protected void onDestroy() {
+	public void onDestroy() {
 	    super.onDestroy();
-	    
-	    GameManager.getInstance().getPlayerOrientationPublisher().unregisterForOrientationUpdates(renderer);
 	    
 	}
 	
@@ -92,6 +165,14 @@ public class ShootingGameActivity extends AbstractGameActivity {
 	public void onBackPressed() {
 		//TODO: This is only temporary, needs to query the user first to ensure that they want to exit.
 		GameManager.getInstance().updateGameState(GameStateEnum.GAME_NAVIGATION);
+	}
+	
+	public GeocentricCoordinate getGameLocation() {
+	    return shootingGameLocation;
+	}
+	
+	public List<GameEntity> getGameEntities() {
+	    return gameEntities;
 	}
 	
 	private class ShootingGameSurfaceView extends GLSurfaceView {
@@ -102,4 +183,20 @@ public class ShootingGameActivity extends AbstractGameActivity {
 			setRenderer(ShootingGameActivity.this.renderer);
 		}
 	}
+
+    @Override
+    public void onGameEntityAdded(GameEntity entity) {
+        synchronized (gameEntities) {
+            if (!gameEntities.contains(entity)) {
+                gameEntities.add(entity);
+            }
+        }
+    }
+
+    @Override
+    public void onGameEntityDeleted(GameEntity entity) {
+        synchronized (gameEntities) {
+            gameEntities.remove(entity);
+        }
+    }
 }
