@@ -26,6 +26,10 @@
  */
 package ucf.chickenzombiebonanza.common;
 
+import java.util.Random;
+
+import android.util.Log;
+
 /**
  * Represents a coordinate in the GCC coordinate space.
  * 
@@ -123,6 +127,26 @@ public class GeocentricCoordinate {
 		this.z = z;
 	}
 	
+	public boolean isZero() {
+	    return getX() == 0 && getY() == 0 && getZ() == 0;
+	}
+	
+	public Vector3d toVector() {
+	    return new Vector3d(getX(),getY(),getZ());
+	}
+	
+	public GeocentricCoordinate applyOffset(Vector3d vec) {
+	    return new GeocentricCoordinate(this.getX()+vec.u(),
+	                                    this.getY()+vec.v(),
+	                                    this.getZ()+vec.w());
+	}
+	
+	public GeocentricCoordinate relativeTo(GeocentricCoordinate center) {
+	    return new GeocentricCoordinate(center.getX()-this.getX(),
+	                                    center.getY()-this.getY(),
+	                                    center.getZ()-this.getZ());
+	}
+	
 	/**
 	 * Gets the distance between this coordinate and another.
 	 * @param coordinate The other coordinate.
@@ -132,5 +156,41 @@ public class GeocentricCoordinate {
 		return Math.sqrt(Math.pow(coordinate.getX()-this.getX(), 2)+
 				Math.pow(coordinate.getY()-this.getY(), 2) +
 				Math.pow(coordinate.getZ()-this.getZ(), 2));
+	}
+	
+	public static GeocentricCoordinate randomPointAround(final GeocentricCoordinate pt, double maxRadius, double minRadius) {
+	    Random generator = new Random();
+	    //TODO: This could be optimized
+	    double x = (((generator.nextDouble() * 2.0) - 1.0)*(maxRadius-minRadius))+minRadius;
+	    double y = (((generator.nextDouble() * 2.0) - 1.0)*(maxRadius-minRadius))+minRadius;
+	    
+	    Log.d("lol", pt + "++");
+	    
+	    Log.d("lol", pt.toVector() + "--");
+	    
+	    Vector3d upVector = pt.toVector().normalize();
+	    
+	    Vector3d surfaceVectorOne = new Vector3d(-upVector.v(),upVector.u(),upVector.w());
+	    Vector3d surfaceVectorTwo = new Vector3d(upVector.w(),upVector.v(),-upVector.u());
+	    
+	    Log.d("lol", surfaceVectorOne + ", " + surfaceVectorTwo);
+	    
+	    surfaceVectorOne = surfaceVectorOne.scale(x);
+	    surfaceVectorTwo = surfaceVectorTwo.scale(y);
+	    
+	    Log.d("lol", "~" + surfaceVectorOne + ", " + surfaceVectorTwo);
+	    
+	    GeocentricCoordinate randomCoord = pt;
+	    randomCoord.applyOffset(surfaceVectorOne);
+	    randomCoord.applyOffset(surfaceVectorTwo);
+
+	    return randomCoord;
+	    
+	}
+	
+	@Override
+	public String toString() {
+	    return new String("GeodeticCoordinate["+getX()+", " + getY() + ", " + getZ() + "]");
+	    
 	}
 }

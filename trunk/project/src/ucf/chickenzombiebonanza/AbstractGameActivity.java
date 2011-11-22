@@ -39,13 +39,13 @@ import android.os.Bundle;
 public abstract class AbstractGameActivity extends Activity implements GameStateListener {
 
     @Override
-    public void onCreate(Bundle bundle) {
+    protected void onCreate(Bundle bundle) {
         super.onCreate(bundle);
         AbstractGameActivity.onCreateStatic(this);
     }
 
     @Override
-    public void onStop() {
+    protected void onStop() {
         super.onStop();
         AbstractGameActivity.onStopStatic(this);
     }
