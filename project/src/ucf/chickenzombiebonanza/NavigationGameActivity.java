@@ -51,6 +51,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Toast;
 import android.content.Context;
 
@@ -86,7 +87,7 @@ public class NavigationGameActivity extends AbstractGameMapActivity {
     private GeoPoint gp;
     private GeoPoint gp1;
     private GeoPoint gp2;
-    private Button overlayButton;
+    private Button scoreButton;
     private Context context;
     private String testNum = "8888.88";
     private int level;
@@ -99,17 +100,34 @@ public class NavigationGameActivity extends AbstractGameMapActivity {
 
 	@Override
 	public void onCreate(Bundle bundle) {
+		
+		
 		super.onCreate(bundle);
 		setContentView(R.layout.main);
 		//setContentView(R.layout.mapme);
+		
+		//need to make enemies appear in range of center point then move to it
+        level = 1;
+        
+        //trying to change textbox. 
+        EditText editText = (EditText)findViewById(R.id.score);
+        int editTextStr = 888;
+       // mapView.setText(getString(R.string.overlay_label, new Object[] {query}));
+        
+        
 		
 		// create a map view
 		mapView = (MapView) findViewById(R.id.mapview);
 		mapView.setBuiltInZoomControls(true);
 		mapView.setSatellite(false);
+		
+		
+		
 
 		mapController = mapView.getController();
 		mapController.setZoom(21); // Zoom 1 is world view
+		
+		
 		
 		 // Convert lat/long in degrees into integers in microdegrees
         latE6 =  (int) (lat*1e6);
@@ -121,17 +139,32 @@ public class NavigationGameActivity extends AbstractGameMapActivity {
         
         //gp = new GeoPoint(latE6, lonE6);       
         //mapController.animateTo(gp);        
+       
+       // will run 5 times to see if your location is displayed not sure if working so not activated yet
+        /*for (int i=0;i<5;i++){
+        	GeoPoint herostart = getLocationHero();
+        	mapController.animateTo(herostart);
+        	showIfLocationDisplayed(i,isLocationDisplayed());
+        	
+        }
+    	*/
         
-        //gets location then shows location of hero in lat and lon then shows on screen and animates to this location
-        GeoPoint herostart = getLocationHero();	   
-        mapController.animateTo(herostart);
+       
+        
+        
+        
+        GeoPoint herostart = getLocationHero();
+    	mapController.animateTo(herostart);
+        
+        
+        //displays lat and lon        
         showLatLonOnScreen(lat,lon);
+        showIfLocationDisplayed(level, isLocationDisplayed());
+        
         
         //if want satellite view this allows us to zoom in more as we will need for the map
         mapView.setSatellite(!mapView.isSatellite());
         
-        //need to make enemies appear in range of center point then move to it
-        level = 3;
         
         
 
@@ -169,6 +202,11 @@ public class NavigationGameActivity extends AbstractGameMapActivity {
                  
         };
         
+        OverlayItem [] menu = {
+            	new OverlayItem( new GeoPoint((int)(lat*1e6),(int)(lon*1e6)), "hero 1", "more details")
+                     
+            };
+        
         
         mapOverlays = mapView.getOverlays();
         drawable1 = this.getResources().getDrawable(R.drawable.chickendrawing2);
@@ -190,18 +228,29 @@ public class NavigationGameActivity extends AbstractGameMapActivity {
              
         
         //this will refresh map i think?
-        mapView.postInvalidate();
+        //mapView.postInvalidate();
         
       
         
 
 	}
 	
-	 
+	
+	
+	private void showIfLocationDisplayed(int i, boolean locationDisplayed) {
+		// TODO Auto-generated method stub
+		Toast msg2 = Toast.makeText(NavigationGameActivity.this,i + "Is the current map displayed = "+ locationDisplayed, Toast.LENGTH_LONG);
+
+        msg2.setGravity(Gravity.BOTTOM, msg2.getXOffset() / 2, msg2.getYOffset() / 2);
+
+        msg2.show();
+	}
+
+
 	private void showLatLonOnScreen(double lat3, double lon3) {
 		// TODO Auto-generated method stub
 		 	
-	        
+		
 	        Toast msg = Toast.makeText(NavigationGameActivity.this, "The lat is " + lat3 + " and the lon is" + lon3, Toast.LENGTH_LONG);
 
 	        msg.setGravity(Gravity.CENTER, msg.getXOffset() / 2, msg.getYOffset() / 2);
