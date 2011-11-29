@@ -27,33 +27,27 @@
 package ucf.chickenzombiebonanza.common;
 
 public class LocalOrientation {
-	private Vector3d u, v, w;
+	private Vector3d up, lookAt;
 	
 	public LocalOrientation() {
-        this.u = new Vector3d();
-        this.v = new Vector3d();
-        this.w = new Vector3d();
+        this.up = new Vector3d();
+        this.lookAt = new Vector3d();
 	}
 	
-	public LocalOrientation(Vector3d right, Vector3d up, Vector3d lookAt) {
-		this.u = right;
-		this.v = up;
-		this.w = lookAt;
-	}
-	
-	public Vector3d getRight() {
-		return u;
+	public LocalOrientation(Vector3d lookAt, Vector3d up) {
+		this.up = up;
+		this.lookAt = lookAt;
 	}
 	
 	public Vector3d getUp() {
-		return v;
+		return up;
 	}
 	
 	public Vector3d getLookAt() {
-		return w;
+		return lookAt;
 	}
 	
 	public String toString() {
-	    return "LocalOrientation[Right:" + getRight() + ", Up:" + getUp() + ", LookAt:" + getLookAt() + "]";
+	    return "LocalOrientation[LookAt:" + getLookAt() + ", Up:" + getUp() + "]";
 	}
 }

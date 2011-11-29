@@ -102,9 +102,8 @@ public class GyroscopeListener extends OrientationPublisher implements SensorEve
             SensorManager.remapCoordinateSystem(rotationMatrix, SensorManager.AXIS_Y, SensorManager.AXIS_MINUS_X, rotationMatrix);
             
             LocalOrientation orientation = new LocalOrientation(
-                new Vector3d(rotationMatrix[0],rotationMatrix[4],rotationMatrix[8]),
-                new Vector3d(rotationMatrix[1],rotationMatrix[5],rotationMatrix[9]),
-                new Vector3d(rotationMatrix[2],rotationMatrix[6],rotationMatrix[10]));
+                new Vector3d(rotationMatrix[2],rotationMatrix[6],rotationMatrix[10]),
+                new Vector3d(rotationMatrix[1],rotationMatrix[5],rotationMatrix[9]));
             this.updateOrientation(orientation, false);
         }
     }

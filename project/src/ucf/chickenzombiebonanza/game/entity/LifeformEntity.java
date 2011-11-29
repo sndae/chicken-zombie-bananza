@@ -15,27 +15,24 @@ public class LifeformEntity extends GameEntity implements HasInventory {
 	
 	private int maxHealth, currentHealth;
 	
-	/*status used for zombie chicken objects.
-	 * 0. standing
-	 * 1. walking
-	 * 2. attacking
-	 * 3. injured
-	 * 4. dead
-	*/
+	private boolean isEnemy = false;
+	
 	private LifeformEntityStateEnum state;
 	
-	public LifeformEntity(PositionPublisher positionPublisher, OrientationPublisher orientationPublisher) {
+	public LifeformEntity(boolean isEnemy, int health, PositionPublisher positionPublisher, OrientationPublisher orientationPublisher) {
 		super(positionPublisher, orientationPublisher, GameEntityTagEnum.LIFEFORM);
-		this.maxHealth = 100;
-		this.currentHealth = 100;
+		this.isEnemy = isEnemy;
+		this.maxHealth = health;
+		this.currentHealth = health;
 		this.state = LifeformEntityStateEnum.ALIVE;
 	}
 	
-	public LifeformEntity(int health, LifeformEntityStateEnum status, GeocentricCoordinate position, LocalOrientation orientation){
+	public LifeformEntity(boolean isEnemy, int health, GeocentricCoordinate position, LocalOrientation orientation){
 		super(position, orientation, GameEntityTagEnum.LIFEFORM);
+		this.isEnemy = isEnemy;
 		this.maxHealth = health;
 		this.currentHealth = health;
-		this.state = status;
+		this.state = LifeformEntityStateEnum.ALIVE;
 	}	
 	
 	int getHealth(){
@@ -46,26 +43,36 @@ public class LifeformEntity extends GameEntity implements HasInventory {
 		return state;
 	}
 	
-	void setHealth(int currentHealth){
-		this.currentHealth = currentHealth;
+	private void setHealth(int currentHealth){
+		this.currentHealth = currentHealth > maxHealth ? maxHealth : currentHealth;
+	}
+	
+	public int getCurrentHealth() {
+		return this.currentHealth;
+	}
+	
+	public boolean isDead() {
+		return this.getCurrentHealth() <= 0;
 	}
 	
 	void setStatus(LifeformEntityStateEnum newstatus){
 		this.state = newstatus;
 	}
-
-	/* (non-Javadoc)
-	 * @see ucf.chickenzombiebonanza.game.entity.GameEntity#interactWith(ucf.chickenzombiebonanza.game.entity.GameEntity)
-	 */
-	@Override
-	public void interactWith(GameEntity entity) {
-		// TODO Auto-generated method stub
-		
+	
+	public boolean isEnemy() {
+		return isEnemy;
 	}
 
-	/* (non-Javadoc)
-	 * @see ucf.chickenzombiebonanza.game.item.HasInventory#addItem(ucf.chickenzombiebonanza.game.item.InventoryObject)
-	 */
+	@Override
+	public void interactWith(GameEntity entity) {
+		if(entity.getTag() == GameEntityTagEnum.LIFEFORM) {
+			LifeformEntity lifeform = (LifeformEntity)entity;
+			if(this.isEnemy() && !lifeform.isEnemy()) {
+				lifeform.damageEntity(5);
+			}
+		}
+	}
+
 	@Override
 	public boolean addItem(InventoryObject item) {
 		// TODO Auto-generated method stub
@@ -77,9 +84,18 @@ public class LifeformEntity extends GameEntity implements HasInventory {
 		super.destroyEntity();		
 	}
 	
+	public void damageEntity(int damage) {
+		setHealth(currentHealth - damage);
+		if(currentHealth < 0) {
+			destroyEntity();
+		}
+	}
 	
+	public void healEntity() {
+		setHealth(maxHealth);
+	}
 	
-	
-	
-	
+	public void healEntity(int amount) {
+		setHealth(currentHealth + amount);
+	}
 }

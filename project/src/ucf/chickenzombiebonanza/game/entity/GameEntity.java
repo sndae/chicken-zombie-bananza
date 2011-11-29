@@ -48,13 +48,13 @@ public abstract class GameEntity implements PositionListener, OrientationListene
 	
 	private final OrientationPublisher orientationPublisher;
 	
-	private final List<GameEntityTagEnum> tags = new ArrayList<GameEntityTagEnum>(1);
+	private final GameEntityTagEnum tag;
 	
 	private final List<GameEntityStateListener> stateListeners = new ArrayList<GameEntityStateListener>();
 	
 	public GameEntity(GeocentricCoordinate position, LocalOrientation orientation, GameEntityTagEnum tag) {
 		this.id = nextAvailableId;
-		this.tags.add(tag);
+		this.tag = tag;
 		positionPublisher = new PositionPublisher();
 	    positionPublisher.updatePosition(position);
 		orientationPublisher = new OrientationPublisher();
@@ -65,7 +65,7 @@ public abstract class GameEntity implements PositionListener, OrientationListene
 	
     public GameEntity(PositionPublisher positionPublisher, OrientationPublisher orientationPublisher, GameEntityTagEnum tag) {
         this.id = nextAvailableId;
-        this.tags.add(tag);
+        this.tag = tag;
         this.positionPublisher = positionPublisher;
         this.orientationPublisher = orientationPublisher;
 
@@ -92,8 +92,8 @@ public abstract class GameEntity implements PositionListener, OrientationListene
 	    return orientationPublisher;
 	}
 	
-	public List<GameEntityTagEnum> getTags() {
-		return tags;
+	public GameEntityTagEnum getTag() {
+		return this.tag;
 	}
 	
 	public final void receivePositionUpdate(GeocentricCoordinate coordinate) {
