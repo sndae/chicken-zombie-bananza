@@ -1,34 +1,48 @@
 package ucf.chickenzombiebonanza.game.item;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import ucf.chickenzombiebonanza.common.Vector3d;
-
 public class WeaponInventoryObject extends InventoryObject {
 	
-	public class WeaponDischarge {
-		private Vector3d trajectory;
-		
-		private int dischargeDamage;
-		
-		private double velocity;
-		
-		private double radius;
-		
-		public WeaponDischarge(Vector3d trajectory, int dischargeDamage,
-				double velocity, double radius) {
-			this.trajectory = trajectory;
-			this.dischargeDamage = dischargeDamage;
-			this.velocity = velocity;
-			this.radius = radius;
-		}
+	public static final WeaponInventoryObject PISTOL_WEAPON = new WeaponInventoryObject("Pistol", 10, 1.0f, 9999);
+	
+	public static final WeaponInventoryObject REVOLVER_WEAPON = new WeaponInventoryObject("Revolver", 30, 1.5f, 30);
+	
+	public static final WeaponInventoryObject SHOTGUN_WEAPON = new WeaponInventoryObject("Shotgun", 30, 2.0f, 30);
+	
+	private final int damageDone;
+	
+	private final float damageRadius;
+	
+	private int currentAmmo;
+	
+	public WeaponInventoryObject(String name, int damage, float radius, int maxAmmo) {
+		super(name, InventoryObjectTypeEnum.WEAPON);
+		this.damageDone = damage;
+		this.damageRadius = radius;
+		this.currentAmmo = maxAmmo;
 	}
 	
-	private final List<WeaponDischarge> weaponDischarges = new ArrayList<WeaponDischarge>();
+	public int getDamageDone() {
+		return damageDone;
+	}
 	
-	public WeaponInventoryObject(String name, int damage) {
-		super(name);
+	public float getFireRadius() {
+		return damageRadius;
+	}
+	
+	public int getAmmoLeft() {
+		return currentAmmo;
+	}
+	
+	public void addAmmo(int amount) {
+		currentAmmo += amount;
+	}
+	
+	public boolean fire() {
+		if(currentAmmo > 0) {
+			currentAmmo -= 1;
+			return true;
+		}
+		return false;
 	}
 	
 }

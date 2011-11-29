@@ -36,28 +36,34 @@ public class WaypointEntity extends GameEntity {
 	
 	private double activationDistance;
 	
-	private final List<WaypointActivationListener> activationListeners = new ArrayList<WaypointActivationListener>(1);
+	private final List<ObjectActivationListener> activationListeners = new ArrayList<ObjectActivationListener>(1);
 	
-	public WaypointEntity(double activationDistance, GeocentricCoordinate position, LocalOrientation orientation) {
-		super(position, orientation, GameEntityTagEnum.WAYPOINT);
+	public WaypointEntity(double activationDistance, GeocentricCoordinate position) {
+		super(position, new LocalOrientation(), GameEntityTagEnum.WAYPOINT);
 		this.activationDistance = activationDistance;
 	}
 
 	@Override
 	public void destroyEntity() {
+		super.destroyEntity();
 		activationListeners.clear();
 	}
 
 	@Override
 	public void interactWith(GameEntity entity) {
 		if (entity.getPosition().distanceFrom(getPosition()) < activationDistance) {
-			for (WaypointActivationListener i : activationListeners) {
-				i.waypointActivated(entity);
+			boolean consumed = false;
+			for (ObjectActivationListener i : activationListeners) {
+				consumed |= i.objectActivated(entity);
+			}
+			
+			if(consumed) {
+				destroyEntity();
 			}
 		}
 	}
 	
-	public void addActivationListener(WaypointActivationListener listener) {
+	public void addActivationListener(ObjectActivationListener listener) {
 		activationListeners.add(listener);
 	}
 }

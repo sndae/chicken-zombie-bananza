@@ -1,5 +1,8 @@
 package ucf.chickenzombiebonanza.game.entity;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import ucf.chickenzombiebonanza.common.GeocentricCoordinate;
 import ucf.chickenzombiebonanza.common.LocalOrientation;
 import ucf.chickenzombiebonanza.common.sensor.OrientationPublisher;
@@ -18,6 +21,8 @@ public class LifeformEntity extends GameEntity implements HasInventory {
 	private boolean isEnemy = false;
 	
 	private LifeformEntityStateEnum state;
+	
+	private final List<InventoryObject> inventory = new ArrayList<InventoryObject>();
 	
 	public LifeformEntity(boolean isEnemy, int health, PositionPublisher positionPublisher, OrientationPublisher orientationPublisher) {
 		super(positionPublisher, orientationPublisher, GameEntityTagEnum.LIFEFORM);
@@ -75,7 +80,12 @@ public class LifeformEntity extends GameEntity implements HasInventory {
 
 	@Override
 	public boolean addItem(InventoryObject item) {
-		// TODO Auto-generated method stub
+		if(!isEnemy()) {
+    		synchronized(inventory) {
+    			inventory.add(item);
+    		}
+    		return true;
+		}
 		return false;
 	}
 
