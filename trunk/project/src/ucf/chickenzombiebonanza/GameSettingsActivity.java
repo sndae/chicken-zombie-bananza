@@ -33,6 +33,7 @@ import ucf.chickenzombiebonanza.game.DifficultyEnum;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.text.Editable;
@@ -121,6 +122,10 @@ public final class GameSettingsActivity extends AbstractGameActivity {
 				//GameManager.getInstance().updateGameState(
 						//GameStateEnum.GAME_NAVIGATION);
 				//finish();
+				launchChangePlayArea();
+				
+	
+				
 			}
 		});
 		
@@ -174,5 +179,10 @@ public final class GameSettingsActivity extends AbstractGameActivity {
 		
 	
 	}
+	
+	protected void launchChangePlayArea() {
+        Intent i = new Intent(this, ChangePlayArea.class);
+        startActivity(i);
+    }
 
 }
