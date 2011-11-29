@@ -74,6 +74,16 @@ public class Vector3d {
         return this.scale(1/mag);
     }
     
+    public double dotProduct(Vector3d rhs) {
+    	return u()*rhs.u() + v()*rhs.v() + w()*rhs.w();
+    }
+    
+    public Vector3d crossProduct(Vector3d rhs) {
+    	return new Vector3d(v()*rhs.w()-w()*rhs.v(),
+    						w()*rhs.u()-u()*rhs.w(),
+    						u()*rhs.v()-v()*rhs.u());
+    }
+    
     public String toString() {
         return "Vector3d[" + u + ", " + v + ", " + w + "]";
     }

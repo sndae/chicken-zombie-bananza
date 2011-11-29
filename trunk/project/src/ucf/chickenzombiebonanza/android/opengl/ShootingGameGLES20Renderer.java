@@ -40,7 +40,7 @@ import javax.microedition.khronos.opengles.GL10;
 
 import ucf.chickenzombiebonanza.common.GeocentricCoordinate;
 import ucf.chickenzombiebonanza.common.LocalOrientation;
-import ucf.chickenzombiebonanza.common.sensor.OrientationListener;
+import ucf.chickenzombiebonanza.common.Matrix44d;
 import ucf.chickenzombiebonanza.game.entity.GameEntity;
 import ucf.chickenzombiebonanza.R;
 import ucf.chickenzombiebonanza.ShootingGameActivity;
@@ -54,7 +54,7 @@ import android.opengl.Matrix;
 /**
  * 
  */
-public class ShootingGameGLES20Renderer implements GLSurfaceView.Renderer, OrientationListener {
+public class ShootingGameGLES20Renderer implements GLSurfaceView.Renderer {
 
     private int simpleProgram, billboardProgram;
     private int mvpMatrixSimpleHandle, projMatrixBillboardHandle, viewMatrixBillboardHandle, modelMatrixBillboardHandle;
@@ -342,20 +342,9 @@ public class ShootingGameGLES20Renderer implements GLSurfaceView.Renderer, Orien
 		gluPerspective(mProjMatrix, 45.0f, ratio, 0.5f, 20.0f);
 	}
 
-    @Override
     public void receiveOrientationUpdate(LocalOrientation orientation) {
-        Matrix.setIdentityM(mVMatrix, 0);
-        mVMatrix[0] = (float) orientation.getRight().u();
-        mVMatrix[4] = (float) orientation.getRight().v();
-        mVMatrix[8] = (float) orientation.getRight().w();
-        
-        mVMatrix[1] = (float) orientation.getUp().u();
-        mVMatrix[5] = (float) orientation.getUp().v();
-        mVMatrix[9] = (float) orientation.getUp().w();
-        
-        mVMatrix[2] = (float) orientation.getLookAt().u();
-        mVMatrix[6] = (float) orientation.getLookAt().v();
-        mVMatrix[10] = (float) orientation.getLookAt().w();
+    	double[] lookAtMatrix = Matrix44d.lookAt(orientation.getLookAt(), orientation.getUp()).getMatrix();
+    	mVMatrix = Matrix44d.doubleArrayToFloatArray(lookAtMatrix);
     }
 
 }

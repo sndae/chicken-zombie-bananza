@@ -45,7 +45,7 @@ import ucf.chickenzombiebonanza.game.entity.LifeformEntity;
 /**
  * 
  */
-public class GameManager implements GameSettingsChangeListener {
+public class GameManager implements GameSettingsChangeListener, GameEntityStateListener {
 
 	private static GameManager instance = null;
 
@@ -57,7 +57,7 @@ public class GameManager implements GameSettingsChangeListener {
 
 	private final GameSettings gameSettings = new GameSettings();
 	
-	private GameEntity playerEntity = null;
+	private LifeformEntity playerEntity = null;
 
 	public static GameManager getInstance() {
 		if (instance == null) {
@@ -79,7 +79,8 @@ public class GameManager implements GameSettingsChangeListener {
 			final OrientationPublisher orientationPublisher) {
 		updateGameState(GameStateEnum.GAME_LOADING);
 		
-		playerEntity = new LifeformEntity(positionPublisher, orientationPublisher);
+		playerEntity = new LifeformEntity(false, 20, positionPublisher, orientationPublisher);
+		playerEntity.registerGameEntityStateListener(this);
 
 		final AtomicBoolean loadingScreenDurationMet = new AtomicBoolean(false);
 
@@ -112,7 +113,12 @@ public class GameManager implements GameSettingsChangeListener {
 		loadThread.start();
 	}
 	
-	public GameEntity getPlayerEntity() {
+	public void restart() {
+		//TODO: Reset score
+		getPlayerEntity().healEntity();
+	}
+	
+	public LifeformEntity getPlayerEntity() {
 	    return playerEntity;
 	}
 	
@@ -154,7 +160,7 @@ public class GameManager implements GameSettingsChangeListener {
 
 		for (GameEntityListenerData i : gameEntityListeners) {
 			if (i.filterTags == null
-					|| GameManager.sharesTag(i.filterTags, entity.getTags())) {
+					|| entity.getTag().isInList(i.filterTags)) {
 				i.listener.onGameEntityAdded(entity);
 			}
 		}
@@ -165,8 +171,7 @@ public class GameManager implements GameSettingsChangeListener {
 			gameEntities.remove(entity);
 			for (GameEntityListenerData i : gameEntityListeners) {
 				if (i.filterTags == null
-						|| GameManager
-								.sharesTag(i.filterTags, entity.getTags())) {
+						|| entity.getTag().isInList(i.filterTags)) {
 					i.listener.onGameEntityDeleted(entity);
 				}
 			}
@@ -252,17 +257,8 @@ public class GameManager implements GameSettingsChangeListener {
 		}
 	}
 
-	public static boolean sharesTag(List<GameEntityTagEnum> list1,
-			List<GameEntityTagEnum> list2) {
-		if (list1 != null && list2 != null) {
-			for (GameEntityTagEnum i : list1) {
-				for (GameEntityTagEnum j : list2) {
-					if (i == j) {
-						return true;
-					}
-				}
-			}
-		}
-		return false;
+	@Override
+	public void onGameEntityDestroyed(GameEntity listener) {
+		this.updateGameState(GameStateEnum.GAME_NAVIGATION);		
 	}
 }

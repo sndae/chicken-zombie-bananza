@@ -16,11 +16,11 @@ public abstract class Sensor {
 		return sensorState == SensorStateEnum.ACTIVE;
 	}
 	
-	public void pauseSensor() {
+	public final void pauseSensor() {
 	    setSensorState(SensorStateEnum.PAUSED);
 	}
 	
-	public void resumeSensor() {
+	public final void resumeSensor() {
 	    setSensorState(SensorStateEnum.INACTIVE);
 	}
 	

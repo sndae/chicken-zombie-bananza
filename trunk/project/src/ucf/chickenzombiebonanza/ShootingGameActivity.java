@@ -34,10 +34,13 @@ import java.util.TimerTask;
 import ucf.chickenzombiebonanza.android.opengl.ShootingGameGLES20Renderer;
 import ucf.chickenzombiebonanza.common.GeocentricCoordinate;
 import ucf.chickenzombiebonanza.common.LocalOrientation;
+import ucf.chickenzombiebonanza.common.Vector3d;
+import ucf.chickenzombiebonanza.common.sensor.OrientationListener;
 import ucf.chickenzombiebonanza.game.GameManager;
 import ucf.chickenzombiebonanza.game.GameStateEnum;
 import ucf.chickenzombiebonanza.game.entity.GameEntity;
 import ucf.chickenzombiebonanza.game.entity.GameEntityListener;
+import ucf.chickenzombiebonanza.game.entity.GameEntityStateListener;
 import ucf.chickenzombiebonanza.game.entity.GameEntityTagEnum;
 import ucf.chickenzombiebonanza.game.entity.LifeformEntity;
 import ucf.chickenzombiebonanza.game.entity.LifeformEntityStateEnum;
@@ -46,13 +49,14 @@ import android.content.Context;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.os.PowerManager;
+import android.view.MotionEvent;
 import android.view.Window;
 import android.view.WindowManager;
 
 /**
  * 
  */
-public class ShootingGameActivity extends AbstractGameActivity implements GameEntityListener {
+public class ShootingGameActivity extends AbstractGameActivity implements GameEntityListener, GameEntityStateListener, OrientationListener {
 	
     private final List<GameEntity> gameEntities = new ArrayList<GameEntity>();
     
@@ -63,6 +67,65 @@ public class ShootingGameActivity extends AbstractGameActivity implements GameEn
 	private PowerManager.WakeLock wakeLock;
 	
 	private GeocentricCoordinate shootingGameLocation;
+	
+	// In meters/second
+	private float currentEnemySpeed = 0.25f;
+	
+	private class MoveEntityThread extends Thread {
+		
+		private boolean isRunning = true, isPaused = false;
+		
+		public void onPause() {
+			isPaused = true;
+		}
+		
+		public void onResume() {
+			isPaused = false;
+		}
+		
+		public boolean isRunning() {
+			return this.isRunning;
+		}
+		
+		public void cancel() {
+			isRunning = false;
+		}
+		
+		@Override
+		public void run() {
+			long waitTime = 100;
+			while(isRunning()) {
+				if(!isPaused) {
+    				GeocentricCoordinate position = getGameLocation();
+    				
+    				synchronized(gameEntities) {
+    					for(GameEntity i : gameEntities) {
+    						GeocentricCoordinate entityPos = i.getPositionPublisher().getCurrentPosition();
+    						if(entityPos.distanceFrom(position) > 1.5f) {
+        						Vector3d moveDir = entityPos.relativeTo(position).toVector().normalize();
+        						moveDir = moveDir.scale(currentEnemySpeed*(waitTime/1000.0));
+        						entityPos = entityPos.applyOffset(moveDir);
+        						i.getPositionPublisher().updatePosition(entityPos);
+    						} else {
+    							if(waitTime != 1000) {
+    								waitTime = 1000;
+    							}
+    							i.interactWith(GameManager.getInstance().getPlayerEntity());
+    						}
+    					}
+    				}
+				}
+				try {
+					synchronized(this) {
+						wait(waitTime);
+					}
+				} catch (InterruptedException e) {
+				}
+			}
+		}
+	}
+	
+	MoveEntityThread moveEntityThread = new MoveEntityThread();
 	
 	@Override
 	protected void onCreate(Bundle bundle) {
@@ -82,18 +145,16 @@ public class ShootingGameActivity extends AbstractGameActivity implements GameEn
 	@Override
 	protected void onStart() {
 	    super.onStart();
-        GameManager.getInstance().getPlayerEntity().getOrientationPublisher().registerForOrientationUpdates(renderer);
+        GameManager.getInstance().getPlayerEntity().getOrientationPublisher().registerForOrientationUpdates(this);
         GameManager.getInstance().registerGameEntityListener(this, new GameEntityTagEnum[]{GameEntityTagEnum.LIFEFORM});
-        
-        
-        final ProgressDialog dialog = ProgressDialog.show(ShootingGameActivity.this, "Waiting", "Waiting for player position...", true);
-        Thread loadThread = new Thread() {
+        GameManager.getInstance().getPlayerEntity().registerGameEntityStateListener(this);        
+		final ProgressDialog dialog = ProgressDialog.show(this, "Waiting for player position",
+				"Waiting for GPS position...", true);Thread loadThread = new Thread() {
             @Override
             public void run() {
                 while(GameManager.getInstance().getPlayerEntity().getPosition().isZero()) {
                     synchronized(this) {
                         try {
-                            
                             this.wait(10);
                         } catch (InterruptedException e) {
                         }
@@ -108,29 +169,24 @@ public class ShootingGameActivity extends AbstractGameActivity implements GameEn
                     @Override
                     public void run() {
                         GeocentricCoordinate randomCoordinate = GeocentricCoordinate.randomPointAround(ShootingGameActivity.this.getGameLocation(), 8, 3);
-                        final GameEntity newEnemy = new LifeformEntity(5, LifeformEntityStateEnum.ALIVE, randomCoordinate, new LocalOrientation());
+                        final GameEntity newEnemy = new LifeformEntity(true, 5, randomCoordinate, new LocalOrientation());
                         GameManager.getInstance().addGameEntity(newEnemy);
-                        Timer killTimer = new Timer();
-                        killTimer.schedule(new TimerTask(){
-                            @Override
-                            public void run() {
-                                newEnemy.destroyEntity();
-                            }}, 5000);                
                     }
                     
                 }, 0, 10000);
                 
+                moveEntityThread.start();
             }
         };
         
         loadThread.start();
-
-	}
+    }
 	
     @Override
     protected void onResume() {
         super.onResume();
         glView.onResume();
+        moveEntityThread.onResume();
         GameManager.getInstance().getPlayerEntity().getOrientationPublisher().resumeSensor();
         wakeLock.acquire();
     }
@@ -139,6 +195,7 @@ public class ShootingGameActivity extends AbstractGameActivity implements GameEn
 	protected void onPause() {
 		super.onPause();
 		glView.onPause();
+		moveEntityThread.onPause();
 		GameManager.getInstance().getPlayerEntity().getOrientationPublisher().pauseSensor();
 		wakeLock.release();
 	}
@@ -147,7 +204,9 @@ public class ShootingGameActivity extends AbstractGameActivity implements GameEn
     protected void onStop() {
         super.onStop();
         GameManager.getInstance().unregisterGameEntityListener(this);
-        GameManager.getInstance().getPlayerEntity().getOrientationPublisher().unregisterForOrientationUpdates(renderer);
+        GameManager.getInstance().getPlayerEntity().getOrientationPublisher().unregisterForOrientationUpdates(this);
+        GameManager.getInstance().getPlayerEntity().unregisterGameEntityStateListener(this);
+        moveEntityThread.cancel();
     }
 	
 	@Override
@@ -170,12 +229,37 @@ public class ShootingGameActivity extends AbstractGameActivity implements GameEn
 	    return gameEntities;
 	}
 	
+	public void fireWeapon() {
+		GeocentricCoordinate center = this.getGameLocation();
+		Vector3d u = GameManager.getInstance().getPlayerEntity().getOrientation().getLookAt();
+		synchronized(gameEntities) {
+			for(GameEntity i : gameEntities) {
+				GeocentricCoordinate entityPos = i.getPosition();
+				Vector3d n = entityPos.relativeTo(center).toVector().normalize();
+				float s = (float)(-n.dotProduct(n)/n.dotProduct(u));
+				
+			}
+		}
+	}
+	
 	private class ShootingGameSurfaceView extends GLSurfaceView {
 		public ShootingGameSurfaceView(Context context) {
 			super(context);
 			
 			setEGLContextClientVersion(2);
 			setRenderer(ShootingGameActivity.this.renderer);
+		}
+		
+		@Override
+		public boolean onTouchEvent(final MotionEvent event) {
+			this.queueEvent(new Runnable() {
+				@Override
+				public void run() {
+					fireWeapon();					
+				}
+				
+			});
+			return true;
 		}
 	}
 
@@ -194,4 +278,14 @@ public class ShootingGameActivity extends AbstractGameActivity implements GameEn
             gameEntities.remove(entity);
         }
     }
+
+	@Override
+	public void onGameEntityDestroyed(GameEntity listener) {
+		this.finish();		
+	}
+
+	@Override
+	public void receiveOrientationUpdate(LocalOrientation orientation) {
+		renderer.receiveOrientationUpdate(orientation);		
+	}
 }

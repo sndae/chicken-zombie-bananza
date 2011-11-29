@@ -50,7 +50,14 @@ public class GpsListener extends PositionPublisher implements LocationListener {
         if(currentPosition != null) {
         	this.updatePosition(locationToGcc(currentPosition));
         }
-        
+	}
+	
+	@Override
+	public void onResume() {
+        Location currentPosition = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        if(currentPosition != null) {
+        	this.updatePosition(locationToGcc(currentPosition));
+        }
 	}
 
 	@Override
