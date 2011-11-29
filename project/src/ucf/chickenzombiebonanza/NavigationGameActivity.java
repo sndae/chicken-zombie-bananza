@@ -314,6 +314,11 @@ public class NavigationGameActivity extends AbstractGameMapActivity implements P
 			return true;
 
 		}
+
+		else if (keyCode == KeyEvent.KEYCODE_C) {
+			centerOnLocation();
+		}
+		
 		return (super.onKeyDown(keyCode, e));
 	}
 
@@ -357,4 +362,15 @@ public class NavigationGameActivity extends AbstractGameMapActivity implements P
 		Gcc_To_Gdc_Converter.Convert(gcc, gdc);
 		mapController.animateTo(new GeoPoint((int)(gdc.latitude * 1E6), (int)(gdc.longitude * 1E6)));	
 	}
+	
+	private void centerOnLocation() {
+		GeocentricCoordinate pt = GameManager.getInstance().getPlayerEntity().getPosition();
+
+		Gcc_To_Gdc_Converter.Init(new WE_Ellipsoid());
+		Gcc_Coord_3d gcc = new Gcc_Coord_3d(pt.getX(),pt.getY(),pt.getZ());
+		Gdc_Coord_3d gdc = new Gdc_Coord_3d();
+		Gcc_To_Gdc_Converter.Convert(gcc, gdc);
+		mapController.animateTo(new GeoPoint((int)(gdc.latitude * 1E6), (int)(gdc.longitude * 1E6)));	
+	        }
+	
 }

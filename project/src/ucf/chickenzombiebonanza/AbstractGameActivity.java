@@ -77,5 +77,9 @@ public abstract class AbstractGameActivity extends Activity implements GameState
             Intent settingsIntent = new Intent(activity, GameSettingsActivity.class);
             activity.startActivity(settingsIntent);
         }
+        else if (state == GameStateEnum.GAME_PLAYAREA) {
+        	Intent playareaIntent = new Intent(activity, PlayAreaActivity.class);
+        	activity.startActivity(playareaIntent);
+        }
     }
 }
