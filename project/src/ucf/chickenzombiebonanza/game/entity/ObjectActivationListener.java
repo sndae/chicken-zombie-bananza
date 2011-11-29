@@ -26,8 +26,8 @@
  */
 package ucf.chickenzombiebonanza.game.entity;
 
-public interface WaypointActivationListener {
+public interface ObjectActivationListener {
 	
-	public boolean waypointActivated(GameEntity activatedBy);
+	public boolean objectActivated(GameEntity activatedBy);
 
 }

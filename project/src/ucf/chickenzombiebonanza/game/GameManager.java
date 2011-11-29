@@ -29,11 +29,14 @@ package ucf.chickenzombiebonanza.game;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import ucf.chickenzombiebonanza.ShootingGameActivity;
 import ucf.chickenzombiebonanza.common.GeocentricCoordinate;
+import ucf.chickenzombiebonanza.common.LocalOrientation;
 import ucf.chickenzombiebonanza.common.sensor.OrientationPublisher;
 import ucf.chickenzombiebonanza.common.sensor.PositionPublisher;
 import ucf.chickenzombiebonanza.game.entity.GameEntity;
@@ -41,6 +44,12 @@ import ucf.chickenzombiebonanza.game.entity.GameEntityListener;
 import ucf.chickenzombiebonanza.game.entity.GameEntityStateListener;
 import ucf.chickenzombiebonanza.game.entity.GameEntityTagEnum;
 import ucf.chickenzombiebonanza.game.entity.LifeformEntity;
+import ucf.chickenzombiebonanza.game.entity.ObjectActivationListener;
+import ucf.chickenzombiebonanza.game.entity.PowerUpEntity;
+import ucf.chickenzombiebonanza.game.entity.WaypointEntity;
+import ucf.chickenzombiebonanza.game.item.HealthInventoryObject;
+import ucf.chickenzombiebonanza.game.item.InventoryObject;
+import ucf.chickenzombiebonanza.game.item.WeaponInventoryObject;
 
 /**
  * 
@@ -58,6 +67,8 @@ public class GameManager implements GameSettingsChangeListener, GameEntityStateL
 	private final GameSettings gameSettings = new GameSettings();
 	
 	private LifeformEntity playerEntity = null;
+	
+	private int currentScore = 0;
 
 	public static GameManager getInstance() {
 		if (instance == null) {
@@ -114,7 +125,7 @@ public class GameManager implements GameSettingsChangeListener, GameEntityStateL
 	}
 	
 	public void restart() {
-		//TODO: Reset score
+		currentScore = 0;
 		getPlayerEntity().healEntity();
 	}
 	
@@ -128,6 +139,10 @@ public class GameManager implements GameSettingsChangeListener, GameEntityStateL
 	 */
 	public GameSettings getGameSettings() {
 		return gameSettings;
+	}
+	
+	public int getCurrentScore() {
+		return currentScore;
 	}
 
 	/**
@@ -148,12 +163,58 @@ public class GameManager implements GameSettingsChangeListener, GameEntityStateL
 	public void updateGameState(GameStateEnum state) {
 		updateGameState(state, null);
 	}
+	
+	public void addEnemy(GeocentricCoordinate gameCenter, float minRadius, float maxRadius) {
+		GeocentricCoordinate randomCoordinate = GeocentricCoordinate.randomPointAround(gameCenter, maxRadius, minRadius);
+        GameEntity newEnemy = new LifeformEntity(true, 5, randomCoordinate, new LocalOrientation());
+        addGameEntity(newEnemy);
+	}
+	
+	public void addWaypoint(GeocentricCoordinate gameCenter) {
+		GeocentricCoordinate randomCoordinate = GeocentricCoordinate.randomPointAround(gameCenter, gameSettings.getPlayAreaRadius(), 0);
+		WaypointEntity newWaypoint = new WaypointEntity(10,randomCoordinate);
+		final int activationScore = (int)randomCoordinate.distanceFrom(getPlayerEntity().getPosition())*10;
+		newWaypoint.addActivationListener(new ObjectActivationListener(){
+			@Override
+			public boolean objectActivated(GameEntity activatedBy) {
+				if(activatedBy.getTag() == GameEntityTagEnum.LIFEFORM) {
+					LifeformEntity lifeform = (LifeformEntity)activatedBy;
+					if(!lifeform.isEnemy()) {
+						GameManager.this.updateScore(activationScore);
+						GameManager.this.updateGameState(GameStateEnum.GAME_SHOOTING);
+					}
+				}
+				return false;
+			}});
+		addGameEntity(newWaypoint);
+	}
+	
+	public void addPowerUp(GeocentricCoordinate gameCenter) {
+		GeocentricCoordinate randomCoordinate = GeocentricCoordinate.randomPointAround(gameCenter, gameSettings.getPlayAreaRadius(), 0);
+		InventoryObject randomItem = getRandomInventoryObject();
+		PowerUpEntity newPowerUp = new PowerUpEntity(randomItem, 10, randomCoordinate);
+		newPowerUp.addActivationListener(new ObjectActivationListener() {
+			@Override
+			public boolean objectActivated(GameEntity activatedBy) {
+				GameManager.this.updateScore(100);
+				return true;
+			}
+			
+		});
+		addGameEntity(newPowerUp);
+	}
 
 	public void addGameEntity(final GameEntity entity) {
 		gameEntities.add(entity);
 		entity.registerGameEntityStateListener(new GameEntityStateListener() {
 			@Override
 			public void onGameEntityDestroyed(GameEntity listener) {
+				if(entity.getTag() == GameEntityTagEnum.LIFEFORM) {
+					LifeformEntity lifeform = (LifeformEntity)listener;
+					if(lifeform.isEnemy() && lifeform.isDead()) {
+						GameManager.this.updateScore(50);
+					}
+				}
 				GameManager.this.removeGameEntity(entity);
 			}
 		});
@@ -260,5 +321,24 @@ public class GameManager implements GameSettingsChangeListener, GameEntityStateL
 	@Override
 	public void onGameEntityDestroyed(GameEntity listener) {
 		this.updateGameState(GameStateEnum.GAME_NAVIGATION);		
+	}
+	
+	public void updateScore(int amount) {
+		if(amount > 0) {
+			currentScore += amount;
+		}
+	}
+	
+	public InventoryObject getRandomInventoryObject() {
+		InventoryObject items[] = new InventoryObject[]{
+				HealthInventoryObject.SMALL_HEALTH_KIT,
+				HealthInventoryObject.MEDIUM_HEALTH_KIT,
+				HealthInventoryObject.LARGE_HEALTH_KIT,
+				WeaponInventoryObject.REVOLVER_WEAPON,
+				WeaponInventoryObject.SHOTGUN_WEAPON
+		};
+		Random generator = new Random();
+		int index = generator.nextInt(items.length);
+		return items[index];
 	}
 }

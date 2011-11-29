@@ -115,7 +115,6 @@ public abstract class GameEntity implements PositionListener, OrientationListene
 	
 	public final void registerGameEntityStateListener(GameEntityStateListener listener) {
 		if(!stateListeners.contains(listener)) {
-			Log.d("lol", "added entity state listener");
 			stateListeners.add(listener);
 		}
 	}

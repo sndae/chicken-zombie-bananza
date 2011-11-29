@@ -168,9 +168,7 @@ public class ShootingGameActivity extends AbstractGameActivity implements GameEn
 
                     @Override
                     public void run() {
-                        GeocentricCoordinate randomCoordinate = GeocentricCoordinate.randomPointAround(ShootingGameActivity.this.getGameLocation(), 8, 3);
-                        final GameEntity newEnemy = new LifeformEntity(true, 5, randomCoordinate, new LocalOrientation());
-                        GameManager.getInstance().addGameEntity(newEnemy);
+                    	GameManager.getInstance().addEnemy(getGameLocation(), 8, 3);
                     }
                     
                 }, 0, 10000);
