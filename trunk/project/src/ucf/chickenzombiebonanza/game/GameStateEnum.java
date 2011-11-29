@@ -43,4 +43,6 @@ public enum GameStateEnum {
 	GAME_SHOOTING,
 	/** The game's settings are being viewed */
 	GAME_SETTINGS,
+	/** The game's play area is being viewed */
+	GAME_PLAYAREA,
 }

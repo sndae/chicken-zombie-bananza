@@ -119,10 +119,9 @@ public final class GameSettingsActivity extends AbstractGameActivity {
 		showPlayAreaButton.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View arg0) {
-				//GameManager.getInstance().updateGameState(
-						//GameStateEnum.GAME_NAVIGATION);
-				//finish();
-				launchChangePlayArea();
+				GameManager.getInstance().updateGameState(
+						GameStateEnum.GAME_PLAYAREA);
+				finish();
 				
 	
 				
@@ -179,10 +178,5 @@ public final class GameSettingsActivity extends AbstractGameActivity {
 		
 	
 	}
-	
-	protected void launchChangePlayArea() {
-        Intent i = new Intent(this, ChangePlayArea.class);
-        startActivity(i);
-    }
 
 }

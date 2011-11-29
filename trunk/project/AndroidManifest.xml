@@ -18,6 +18,7 @@
             </intent-filter>
         </activity>
 		<activity android:name="GameLoadingActivity" android:label="@string/app_name"></activity><activity android:label="@string/app_name" android:name="NavigationGameActivity" android:screenOrientation="landscape"></activity><activity android:name="GameSettingsActivity" android:label="@string/app_name"></activity><activity android:name="ShootingGameActivity" android:label="@string/app_name" android:screenOrientation="landscape"></activity>
+		<activity android:name="PlayAreaActivity" android:screenOrientation="landscape" android:label="@string/app_name"></activity>
 		
 		
 		
