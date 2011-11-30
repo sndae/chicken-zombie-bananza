@@ -94,14 +94,13 @@ public class NavigationGameActivity extends AbstractGameMapActivity implements P
 
 		mapController = mapView.getController();
 		mapController.setZoom(21); // Zoom 1 is world view
-		
-		final ProgressDialog dialog = ProgressDialog.show(this, "Waiting for player position",
-				"Waiting for GPS position...", true);
+
+		final ProgressDialog dialog = ProgressDialog.show(this, "Waiting for player position", "Waiting for GPS position...", true);
 		Thread loadThread = new Thread() {
 			@Override
 			public void run() {
-				while (GameManager.getInstance().getPlayerEntity()
-						.getPosition().isZero()) {
+				GeocentricCoordinate position = GameManager.getInstance().getPlayerEntity().getPosition();
+				while (position == null || position.isZero()) {
 					synchronized (this) {
 						try {
 
@@ -109,6 +108,7 @@ public class NavigationGameActivity extends AbstractGameMapActivity implements P
 						} catch (InterruptedException e) {
 						}
 					}
+					position = GameManager.getInstance().getPlayerEntity().getPosition();
 				}
 				dialog.dismiss();
 
@@ -222,33 +222,10 @@ public class NavigationGameActivity extends AbstractGameMapActivity implements P
 	@Override
 	public void onResume() {
 		super.onResume();
-		GameManager.getInstance().getPlayerEntity().getPositionPublisher()
-				.resumeSensor();
+		GameManager.getInstance().getPlayerEntity().getPositionPublisher().resumeSensor();
 		GameManager.getInstance().getPlayerEntity().getPositionPublisher().registerForPositionUpdates(this);
 		if (GameManager.getInstance().getPlayerEntity().isDead()) {
-			AlertDialog.Builder builder = new AlertDialog.Builder(this);
-			builder
-					.setMessage(
-							"You have died. Your score this session was ####. Would you like to try again?")
-					.setCancelable(false).setPositiveButton("Yes",
-							new DialogInterface.OnClickListener() {
-								@Override
-								public void onClick(DialogInterface dialog,
-										int which) {
-									GameManager.getInstance().restart();
-								}
-							}).setNegativeButton("Surrender",
-							new DialogInterface.OnClickListener() {
-								@Override
-								public void onClick(DialogInterface dialog,
-										int which) {
-									GameManager.getInstance().restart();
-									NavigationGameActivity.this
-											.moveTaskToBack(true);
-								}
-							});
-			AlertDialog alert = builder.create();
-			alert.show();
+			onGameOver();
 		}
 	}
 
@@ -307,19 +284,17 @@ public class NavigationGameActivity extends AbstractGameMapActivity implements P
 		}
 	}
 
-	// when you push the s key it will go to satellite view and back
 	public boolean onKeyDown(int keyCode, KeyEvent e) {
+		// When you push the s key it will go to satellite view and back
 		if (keyCode == KeyEvent.KEYCODE_S) {
 			mapView.setSatellite(!mapView.isSatellite());
 			return true;
-
-		}
-
-		else if (keyCode == KeyEvent.KEYCODE_C) {
+		} else if (keyCode == KeyEvent.KEYCODE_C) {
 			centerOnLocation();
+			return true;
 		}
-		
-		return (super.onKeyDown(keyCode, e));
+
+		return super.onKeyDown(keyCode, e);
 	}
 
 	@Override
@@ -362,15 +337,42 @@ public class NavigationGameActivity extends AbstractGameMapActivity implements P
 		Gcc_To_Gdc_Converter.Convert(gcc, gdc);
 		mapController.animateTo(new GeoPoint((int)(gdc.latitude * 1E6), (int)(gdc.longitude * 1E6)));	
 	}
-	
+
 	private void centerOnLocation() {
 		GeocentricCoordinate pt = GameManager.getInstance().getPlayerEntity().getPosition();
-
 		Gcc_To_Gdc_Converter.Init(new WE_Ellipsoid());
-		Gcc_Coord_3d gcc = new Gcc_Coord_3d(pt.getX(),pt.getY(),pt.getZ());
+		Gcc_Coord_3d gcc = new Gcc_Coord_3d(pt.getX(), pt.getY(), pt.getZ());
 		Gdc_Coord_3d gdc = new Gdc_Coord_3d();
 		Gcc_To_Gdc_Converter.Convert(gcc, gdc);
-		mapController.animateTo(new GeoPoint((int)(gdc.latitude * 1E6), (int)(gdc.longitude * 1E6)));	
-	        }
+		mapController.animateTo(new GeoPoint((int) (gdc.latitude * 1E6), (int) (gdc.longitude * 1E6)));
+	}
 	
+	private void onGameOver() {
+		StringBuilder strBuilder = new StringBuilder();
+		strBuilder.append("You have died.");
+		strBuilder.append("Your score this session was ");
+		strBuilder.append(GameManager.getInstance().getCurrentScore());
+		strBuilder.append(".");
+		strBuilder.append("Would you like to try again?");
+		
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		builder.setMessage(strBuilder.toString()).
+			setCancelable(false).
+			setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					GameManager.getInstance().restart();
+				}
+			}).
+			setNegativeButton("Surrender", new DialogInterface.OnClickListener() {
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					GameManager.getInstance().restart();
+					NavigationGameActivity.this.moveTaskToBack(true);
+				}
+		});
+		AlertDialog alert = builder.create();
+		alert.show();	
+	}
+
 }
