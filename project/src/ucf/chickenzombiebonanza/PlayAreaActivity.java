@@ -6,7 +6,7 @@ import android.os.Bundle;
 
 import com.google.android.maps.MapActivity;
 
-public class ChangePlayArea extends MapActivity {
+public class PlayAreaActivity extends MapActivity {
 
 	@Override
 	protected boolean isRouteDisplayed() {
