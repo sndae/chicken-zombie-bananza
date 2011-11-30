@@ -39,25 +39,24 @@ import ucf.chickenzombiebonanza.common.GeocentricCoordinate;
 import ucf.chickenzombiebonanza.common.sensor.PositionPublisher;
 
 public class GpsListener extends PositionPublisher implements LocationListener {
-	
+
 	private final LocationManager locationManager;
-	
+
 	public GpsListener(Context context) {
 		locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0,
-                        0, this);
-        Location currentPosition = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-        if(currentPosition != null) {
-        	this.updatePosition(locationToGcc(currentPosition));
-        }
+		locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
+		refreshGpsLocation();
 	}
-	
+
+	@Override
+	public GeocentricCoordinate getCurrentPosition() {
+		refreshGpsLocation();
+		return super.getCurrentPosition();
+	}
+
 	@Override
 	public void onResume() {
-        Location currentPosition = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-        if(currentPosition != null) {
-        	this.updatePosition(locationToGcc(currentPosition));
-        }
+		refreshGpsLocation();
 	}
 
 	@Override
@@ -72,20 +71,27 @@ public class GpsListener extends PositionPublisher implements LocationListener {
 
 	@Override
 	public void onProviderEnabled(String provider) {
-		// Do nothing		
+		// Do nothing
 	}
 
 	@Override
 	public void onStatusChanged(String provider, int status, Bundle extras) {
 		// Do nothing
 	}
-	
+
 	public static GeocentricCoordinate locationToGcc(Location location) {
 		Gdc_To_Gcc_Converter.Init(new WE_Ellipsoid());
-		Gdc_Coord_3d gdc = new Gdc_Coord_3d(location.getLatitude(),location.getLongitude(),location.getAltitude());
+		Gdc_Coord_3d gdc = new Gdc_Coord_3d(location.getLatitude(), location.getLongitude(), location.getAltitude());
 		Gcc_Coord_3d gcc = new Gcc_Coord_3d();
 		Gdc_To_Gcc_Converter.Convert(gdc, gcc);
-		return new GeocentricCoordinate(gcc.x,gcc.y,gcc.z);
+		return new GeocentricCoordinate(gcc.x, gcc.y, gcc.z);
+	}
+
+	private void refreshGpsLocation() {
+		Location currentPosition = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+		if (currentPosition != null) {
+			updatePosition(locationToGcc(currentPosition));
+		}
 	}
 
 }
