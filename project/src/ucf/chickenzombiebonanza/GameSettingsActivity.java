@@ -119,6 +119,12 @@ public final class GameSettingsActivity extends AbstractGameActivity {
 		showPlayAreaButton.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View arg0) {
+				//When this works this is suppose to also turn on and off the visibility of the
+				//text boxes
+				//final EditText Level = (EditText) findViewById(R.id.Level);
+				//final EditText score = (EditText) findViewById(R.id.score);			
+				//Level.setVisibility(1);
+				//score.setVisibility(1);
 				GameManager.getInstance().updateGameState(
 						GameStateEnum.GAME_PLAYAREA);
 				finish();
@@ -163,6 +169,8 @@ public final class GameSettingsActivity extends AbstractGameActivity {
 		GameManager.getInstance()
 				.updateGameState(GameStateEnum.GAME_NAVIGATION);
 		
+		//Level.setVisibility(0); They would turn back on here
+		//score.setVisibility(0); As it would not be possbile to get back
 	}
 	
 	public void onApplyPress(){
