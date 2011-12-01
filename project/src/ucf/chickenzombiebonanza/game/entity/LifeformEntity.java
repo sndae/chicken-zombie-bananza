@@ -82,6 +82,7 @@ public class LifeformEntity extends GameEntity implements HasInventory {
 	
 	private void setHealth(int currentHealth){
 		this.currentHealth = currentHealth > maxHealth ? maxHealth : currentHealth;
+		this.currentHealth = this.currentHealth < 0 ? 0 : this.currentHealth;
 		updateHealthListeners();
 	}
 	
@@ -209,5 +210,25 @@ public class LifeformEntity extends GameEntity implements HasInventory {
     
     public void updateHealthListener(LifeformHealthListener listener) {
         listener.onLifeformHealthChange(getCurrentHealth(), maxHealth);
+    }
+
+    @Override
+    public boolean useItem(InventoryObject item) {
+        synchronized (inventory) {
+            for (InventoryObject i : inventory) {
+                if (i.equals(item)) {
+                    if (item.getType() == InventoryObjectTypeEnum.HEALTH) {
+                        HealthInventoryObject healthObject = (HealthInventoryObject) item;
+                        if (healthObject.use()) {
+                            this.healEntity(healthObject.getHealingAmount());
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
     }
 }

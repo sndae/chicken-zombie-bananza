@@ -93,6 +93,9 @@ public class GameManager implements GameSettingsChangeListener, GameEntityStateL
 		
 		playerEntity = new LifeformEntity(false, 20, positionPublisher, orientationPublisher);
 		playerEntity.addItem(WeaponInventoryObject.PISTOL_WEAPON);
+		playerEntity.addItem(HealthInventoryObject.SMALL_HEALTH_KIT);
+		playerEntity.addItem(HealthInventoryObject.SMALL_HEALTH_KIT);
+		playerEntity.addItem(HealthInventoryObject.LARGE_HEALTH_KIT);
 		playerEntity.registerGameEntityStateListener(this);
 
 		final AtomicBoolean loadingScreenDurationMet = new AtomicBoolean(false);

@@ -47,6 +47,8 @@ import ucf.chickenzombiebonanza.game.entity.GameEntity;
 import ucf.chickenzombiebonanza.game.entity.GameEntityListener;
 import ucf.chickenzombiebonanza.game.entity.GameEntityTagEnum;
 import ucf.chickenzombiebonanza.game.entity.LifeformHealthListener;
+import ucf.chickenzombiebonanza.game.item.HealthInventoryObject;
+import ucf.chickenzombiebonanza.game.item.InventoryObject;
 
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.ItemizedOverlay;
@@ -61,11 +63,14 @@ import android.content.DialogInterface;
 
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 /**
@@ -88,8 +93,11 @@ public class NavigationGameActivity extends AbstractGameMapActivity implements P
     
     private TextView healthTextView;
     private TextView scoreTextView;
+    
+    private LinearLayout itemLayout;
 
     private final Map<GameEntity, OverlayItem> entityToOverlayItemMap = new HashMap<GameEntity, OverlayItem>();
+    private final Map<InventoryObject, ImageButton> inventoryObjectToButton = new HashMap<InventoryObject, ImageButton>();
 
     @Override
     public void onCreate(Bundle bundle) {
@@ -120,6 +128,8 @@ public class NavigationGameActivity extends AbstractGameMapActivity implements P
                     position = GameManager.getInstance().getPlayerEntity().getPosition();
                 }
                 dialog.dismiss();
+                
+                itemLayout = (LinearLayout) findViewById(R.id.itemsLayout);
 
                 playerDrawableIcon = NavigationGameActivity.this.getResources().getDrawable(R.drawable.playermapicon);
                 waypointDrawableIcon = NavigationGameActivity.this.getResources().getDrawable(R.drawable.waypointmapicon);
@@ -176,6 +186,7 @@ public class NavigationGameActivity extends AbstractGameMapActivity implements P
         if (GameManager.getInstance().getPlayerEntity().isDead()) {
             onGameOver();
         }
+        refreshItems();
     }
 
     @Override
@@ -448,5 +459,44 @@ public class NavigationGameActivity extends AbstractGameMapActivity implements P
         scoreTextView.setText("Score: " + score);
         scoreTextView.invalidate();        
     }
-
+    
+    public void refreshItems() {
+        List<HealthInventoryObject> objects = GameManager.getInstance().getPlayerEntity().getHealthPacks();
+        synchronized(inventoryObjectToButton) {
+            for(HealthInventoryObject i : objects) {
+                final HealthInventoryObject healthObject = i;
+                if(i.getCount() <= 0) {
+                    if(inventoryObjectToButton.containsKey(i)) {
+                        if(itemLayout == null) {
+                            itemLayout = (LinearLayout) findViewById(R.id.itemsLayout);
+                        }
+                        itemLayout.removeView(inventoryObjectToButton.get(i));
+                        inventoryObjectToButton.remove(i);
+                    }
+                } else if (!inventoryObjectToButton.containsKey(i)) {
+                    ImageButton newButton = new ImageButton(this);
+                    if(i.equals(HealthInventoryObject.SMALL_HEALTH_KIT)) {
+                        newButton.setImageResource(R.drawable.smallmedkiticon);
+                    } else if (i.equals(HealthInventoryObject.MEDIUM_HEALTH_KIT)) {
+                        newButton.setImageResource(R.drawable.mediummedkiticon);
+                    } else if(i.equals(HealthInventoryObject.LARGE_HEALTH_KIT)) {
+                        newButton.setImageResource(R.drawable.largemedkiticon);
+                    }
+                    newButton.setOnClickListener(new OnClickListener() {
+                        @Override
+                        public void onClick(View arg0) {
+                            GameManager.getInstance().getPlayerEntity().useItem(healthObject);
+                            refreshItems();
+                        }
+                        
+                    });
+                    inventoryObjectToButton.put(healthObject, newButton);
+                    if(itemLayout == null) {
+                        itemLayout = (LinearLayout) findViewById(R.id.itemsLayout);
+                    }
+                    itemLayout.addView(newButton);
+                }
+            }
+        }
+    }
 }

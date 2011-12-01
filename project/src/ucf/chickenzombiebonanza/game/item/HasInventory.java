@@ -29,5 +29,7 @@ package ucf.chickenzombiebonanza.game.item;
 public interface HasInventory {
 	
 	public boolean addItem(InventoryObject item);
+	
+	public boolean useItem(InventoryObject item);
 
 }

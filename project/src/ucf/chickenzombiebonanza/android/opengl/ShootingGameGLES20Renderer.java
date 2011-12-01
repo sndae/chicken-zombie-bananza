@@ -71,7 +71,7 @@ public class ShootingGameGLES20Renderer implements GLSurfaceView.Renderer {
 
     private FloatBuffer floorVertexBuffer, floorColorBuffer, billboardVertexBuffer, billboardColorBuffer, billboardTextureBuffer;
     
-    int[] textures = new int[1];
+    int[] textures = new int[2];
     
     private final ShootingGameActivity shootingGameContext;
     
@@ -188,17 +188,43 @@ public class ShootingGameGLES20Renderer implements GLSurfaceView.Renderer {
         billboardTextureBuffer = tbb.asFloatBuffer();
         billboardTextureBuffer.put(billboardTextureArray);
         billboardTextureBuffer.position(0);
-
-        Bitmap bitmap = BitmapFactory.decodeResource(shootingGameContext.getResources(), R.drawable.chickenimagetexture);
         
-        GLES20.glGenTextures(1, textures, 0);
+        GLES20.glGenTextures(2, textures, 0);
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textures[0]);
+        
+        Bitmap bitmap = BitmapFactory.decodeResource(shootingGameContext.getResources(), R.drawable.chickenfrontimagetexture);
         
         ByteBuffer byteBuffer = ByteBuffer.allocateDirect(bitmap.getWidth() * bitmap.getHeight() * 4);
         byteBuffer.order(ByteOrder.BIG_ENDIAN);
         IntBuffer ib = byteBuffer.asIntBuffer();
 
         int[] pixels = new int[bitmap.getWidth() * bitmap.getHeight()];
+        bitmap.getPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
+        for(int i=0; i<pixels.length; i++){
+            ib.put(pixels[i] << 8 | pixels[i] >>> 24);
+        }
+
+        bitmap.recycle();
+
+        byteBuffer.position(0);
+
+        GLES20.glTexImage2D ( GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA, bitmap.getWidth(), bitmap.getHeight(), 0,
+                              GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, byteBuffer );
+
+        GLES20.glTexParameteri ( GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR );
+        GLES20.glTexParameteri ( GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR );
+        GLES20.glTexParameteri ( GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE );
+        GLES20.glTexParameteri ( GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE );
+        
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textures[1]);
+        
+        bitmap = BitmapFactory.decodeResource(shootingGameContext.getResources(), R.drawable.chickensideimagetexture);
+        
+        byteBuffer = ByteBuffer.allocateDirect(bitmap.getWidth() * bitmap.getHeight() * 4);
+        byteBuffer.order(ByteOrder.BIG_ENDIAN);
+        ib = byteBuffer.asIntBuffer();
+
+        pixels = new int[bitmap.getWidth() * bitmap.getHeight()];
         bitmap.getPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
         for(int i=0; i<pixels.length; i++){
             ib.put(pixels[i] << 8 | pixels[i] >>> 24);
@@ -293,7 +319,6 @@ public class ShootingGameGLES20Renderer implements GLSurfaceView.Renderer {
         GLES20.glUniformMatrix4fv(projMatrixBillboardHandle, 1, false, mProjMatrix, 0);
         GLES20.glUniformMatrix4fv(viewMatrixBillboardHandle, 1, false, mVMatrix, 0);
         GLES20.glUniform1i(samplerBillboardHandle, 0);
-        GLES20.glUniform1i(samplerBillboardHandle, 0);
         
         GLES20.glVertexAttribPointer(positionBillboardHandle, 4, GLES20.GL_FLOAT, false, 16, billboardVertexBuffer);
         GLES20.glEnableVertexAttribArray(positionBillboardHandle);
@@ -304,6 +329,9 @@ public class ShootingGameGLES20Renderer implements GLSurfaceView.Renderer {
         
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textures[0]);
+        
+        GLES20.glActiveTexture(GLES20.GL_TEXTURE1);
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textures[1]);
         
         synchronized (shootingGameContext.getGameEntities()) {        
             for(GameEntity i : shootingGameContext.getGameEntities()) {

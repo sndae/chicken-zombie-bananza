@@ -8,6 +8,5 @@ varying vec2 textCoord;
 
 void main()
 {
-    //gl_FragColor = fragColor;
     gl_FragColor = texture2D(textureSampler, textCoord);
 }
