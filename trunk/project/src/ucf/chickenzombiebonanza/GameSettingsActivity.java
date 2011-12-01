@@ -127,10 +127,6 @@ public final class GameSettingsActivity extends AbstractGameActivity {
 				//score.setVisibility(1);
 				GameManager.getInstance().updateGameState(
 						GameStateEnum.GAME_PLAYAREA);
-				finish();
-				
-	
-				
 			}
 		});
 		
