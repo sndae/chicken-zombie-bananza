@@ -81,6 +81,8 @@ public class NavigationGameActivity extends AbstractGameMapActivity implements P
     private double multiplier1b = 1.000002;
     private double multiplier1c = 1.000003;
     private double multiplier1d = 1.000004;
+    public static double latitude = PlayAreaActivity.latitude, longitude = PlayAreaActivity.longitude;
+    public static double initX = PlayAreaActivity.initX, initY = PlayAreaActivity.initY;
 
     @Override
 	public void onCreate(Bundle bundle) {
@@ -94,6 +96,10 @@ public class NavigationGameActivity extends AbstractGameMapActivity implements P
 
 		mapController = mapView.getController();
 		mapController.setZoom(21); // Zoom 1 is world view
+		latitude = PlayAreaActivity.latitude;
+		longitude = PlayAreaActivity.longitude;
+		initX = PlayAreaActivity.initX;
+		initY = PlayAreaActivity.initY;
 
 		final ProgressDialog dialog = ProgressDialog.show(this, "Waiting for player position", "Waiting for GPS position...", true);
 		Thread loadThread = new Thread() {
@@ -293,6 +299,10 @@ public class NavigationGameActivity extends AbstractGameMapActivity implements P
 			centerOnLocation();
 			return true;
 		}
+		else if (keyCode == KeyEvent.KEYCODE_SPACE){
+			centerOnPlayArea();
+			return true;
+		}
 
 		return super.onKeyDown(keyCode, e);
 	}
@@ -346,6 +356,34 @@ public class NavigationGameActivity extends AbstractGameMapActivity implements P
 		Gcc_To_Gdc_Converter.Convert(gcc, gdc);
 		mapController.animateTo(new GeoPoint((int) (gdc.latitude * 1E6), (int) (gdc.longitude * 1E6)));
 	}
+	
+private void centerOnPlayArea() {
+		
+		
+		if (latitude != 0 || longitude != 0 && (initX != 0 && initY !=0)) {
+			
+			mapController.animateTo(new GeoPoint((int)(latitude * 1E6), (int)(longitude * 1E6)));
+			initX = latitude;
+			initY = longitude;
+			}
+		        		
+		else if (initX == 0 && initY ==0) {
+		GeocentricCoordinate pt = GameManager.getInstance().getPlayerEntity().getPosition();
+
+		Gcc_To_Gdc_Converter.Init(new WE_Ellipsoid());
+		Gcc_Coord_3d gcc = new Gcc_Coord_3d(pt.getX(),pt.getY(),pt.getZ());
+		Gdc_Coord_3d gdc = new Gdc_Coord_3d();
+		Gcc_To_Gdc_Converter.Convert(gcc, gdc); 
+		mapController.animateTo(new GeoPoint((int)(gdc.latitude * 1E6), (int)(gdc.longitude * 1E6)));	
+		
+		latitude = gdc.latitude;
+		longitude = gdc.longitude;
+		}
+		
+	}
+	
+	
+	
 	
 	private void onGameOver() {
 		StringBuilder strBuilder = new StringBuilder();
