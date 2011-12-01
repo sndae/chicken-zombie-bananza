@@ -50,12 +50,9 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.opengl.GLSurfaceView;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Looper;
 import android.os.PowerManager;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.Window;
 import android.view.WindowManager;
@@ -91,7 +88,7 @@ public class ShootingGameActivity extends AbstractGameActivity implements GameEn
         }
     };
 
-	private class MoveEntityThread extends Thread {
+	private class EntityAIThread extends Thread {
 		
 		private boolean isRunning = true, isPaused = false;
 		
@@ -145,7 +142,7 @@ public class ShootingGameActivity extends AbstractGameActivity implements GameEn
 		}
 	}
 	
-	MoveEntityThread moveEntityThread = new MoveEntityThread();
+	EntityAIThread moveEntityThread = new EntityAIThread();
 	
 	AtomicBoolean spawnEnemyBoolean = new AtomicBoolean(true);
 	

@@ -28,8 +28,6 @@ package ucf.chickenzombiebonanza.common;
 
 import java.util.Random;
 
-import android.util.Log;
-
 /**
  * Represents a coordinate in the GCC coordinate space.
  * 
