@@ -84,7 +84,6 @@ public class PlayAreaActivity extends AbstractGameMapActivity  {
 	private boolean touchStarted = false;
 	public static double latitude = 0, longitude = 0;
 	public static double initX = 0, initY = 0;
-    static int area = 0;
     
     public void onCreate(Bundle bundle) {
 		super.onCreate(bundle);
