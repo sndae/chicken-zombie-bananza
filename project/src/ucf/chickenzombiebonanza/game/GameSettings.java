@@ -41,7 +41,7 @@ public class GameSettings {
 	// In meters
 	private float playAreaRadius = 0.0f;
 	
-	private DifficultyEnum gameDifficulty = DifficultyEnum.MEDIUM;
+	private DifficultyEnum gameDifficulty = DifficultyEnum.EASY;
 
 	private final List<GameSettingsChangeListener> listeners = new ArrayList<GameSettingsChangeListener>();
 

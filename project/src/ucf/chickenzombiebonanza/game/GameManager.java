@@ -34,9 +34,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import android.util.Log;
-
-import ucf.chickenzombiebonanza.ShootingGameActivity;
 import ucf.chickenzombiebonanza.common.GeocentricCoordinate;
 import ucf.chickenzombiebonanza.common.LocalOrientation;
 import ucf.chickenzombiebonanza.common.sensor.OrientationPublisher;

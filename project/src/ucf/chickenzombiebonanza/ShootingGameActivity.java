@@ -45,13 +45,15 @@ import ucf.chickenzombiebonanza.game.entity.GameEntityListener;
 import ucf.chickenzombiebonanza.game.entity.GameEntityStateListener;
 import ucf.chickenzombiebonanza.game.entity.GameEntityTagEnum;
 import ucf.chickenzombiebonanza.game.entity.LifeformEntity;
-import ucf.chickenzombiebonanza.game.entity.LifeformEntityStateEnum;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.opengl.GLSurfaceView;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.PowerManager;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -80,6 +82,15 @@ public class ShootingGameActivity extends AbstractGameActivity implements GameEn
 	
 	private int enemyDestroyedCount = 0;
 	
+	private final Handler handler = new Handler();
+	
+    private final Runnable endGameSuccessRunnable = new Runnable() {
+        @Override
+        public void run() {
+            endGame(true);
+        }
+    };
+
 	private class MoveEntityThread extends Thread {
 		
 		private boolean isRunning = true, isPaused = false;
@@ -152,20 +163,19 @@ public class ShootingGameActivity extends AbstractGameActivity implements GameEn
 		PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
         wakeLock = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK, "DoNotDimScreen");
 	}
-	
-	@Override
-	protected void onStart() {
-	    super.onStart();
+
+    @Override
+    protected void onStart() {
+        super.onStart();
         GameManager.getInstance().getPlayerEntity().getOrientationPublisher().registerForOrientationUpdates(this);
-        GameManager.getInstance().registerGameEntityListener(this, new GameEntityTagEnum[]{GameEntityTagEnum.LIFEFORM});
-        GameManager.getInstance().getPlayerEntity().registerGameEntityStateListener(this);        
-		final ProgressDialog dialog = ProgressDialog.show(this, "Waiting for player position",
-				"Waiting for GPS position...", true);
-		Thread loadThread = new Thread() {
+        GameManager.getInstance().registerGameEntityListener(this, new GameEntityTagEnum[] { GameEntityTagEnum.LIFEFORM });
+        GameManager.getInstance().getPlayerEntity().registerGameEntityStateListener(this);
+        final ProgressDialog dialog = ProgressDialog.show(this, "Waiting for player position", "Waiting for GPS position...", true);
+        Thread loadThread = new Thread() {
             @Override
             public void run() {
-                while(GameManager.getInstance().getPlayerEntity().getPosition().isZero()) {
-                    synchronized(this) {
+                while (GameManager.getInstance().getPlayerEntity().getPosition().isZero()) {
+                    synchronized (this) {
                         try {
                             this.wait(10);
                         } catch (InterruptedException e) {
@@ -174,11 +184,11 @@ public class ShootingGameActivity extends AbstractGameActivity implements GameEn
                 }
                 dialog.dismiss();
                 shootingGameLocation = GameManager.getInstance().getPlayerEntity().getPosition();
-                
+
                 startGame();
             }
         };
-        
+
         loadThread.start();
     }
 	
@@ -251,15 +261,27 @@ public class ShootingGameActivity extends AbstractGameActivity implements GameEn
 	}
 	
 	public void fireWeapon() {
+	    List<LifeformEntity> damagedEntities = new ArrayList<LifeformEntity>();
+	    
 		GeocentricCoordinate center = this.getGameLocation();
-		Vector3d u = GameManager.getInstance().getPlayerEntity().getOrientation().getLookAt();
+		Vector3d u = GameManager.getInstance().getPlayerEntity().getOrientation().getLookAt().normalize();
+		
 		synchronized(gameEntities) {
 			for(GameEntity i : gameEntities) {
-				GeocentricCoordinate entityPos = i.getPosition();
-				Vector3d n = entityPos.relativeTo(center).toVector().normalize();
-				float s = (float)(-n.dotProduct(n)/n.dotProduct(u));
-				
+			    if(i.getTag() == GameEntityTagEnum.LIFEFORM) {
+    				GeocentricCoordinate entityPos = i.getPosition();
+    				Vector3d v = entityPos.relativeTo(center).toVector().normalize();
+    				float angle = (float)Math.acos(u.dotProduct(v));
+    				float distance = (float)(center.distanceFrom(entityPos)*Math.sin(angle));
+    				if(distance < 2f) {
+    				    damagedEntities.add((LifeformEntity)i);
+    				}
+			    }
 			}
+		}
+		
+		for(LifeformEntity i : damagedEntities) {
+		    i.damageEntity(5);
 		}
 	}
 	
@@ -320,7 +342,7 @@ public class ShootingGameActivity extends AbstractGameActivity implements GameEn
 	private void enemyDefeated() {
 		enemyDestroyedCount++;
 		if(enemyDestroyedCount >= gameDifficulty.getEnemyCount()) {
-			endGame(true);
+		    handler.post(endGameSuccessRunnable);
 		}
 	}
 	
@@ -344,22 +366,28 @@ public class ShootingGameActivity extends AbstractGameActivity implements GameEn
         
         moveEntityThread.start();
 	}
-	
-	private void endGame(boolean success) {
-		if(success) {
-			GameManager.getInstance().updateScore(gameDifficulty.getSurvivalScore());
-			
-			StringBuilder strBuilder = new StringBuilder();
-			strBuilder.append("You have survived!\n");
-			strBuilder.append("Your score so far is ");
-			strBuilder.append(GameManager.getInstance().getCurrentScore());
-			strBuilder.append(".");
-			
-			AlertDialog.Builder successAlert = new AlertDialog.Builder(this);
-			successAlert.setMessage(strBuilder.toString()).setCancelable(true).setPositiveButton("Continue", null);
-			AlertDialog dialog = successAlert.create();
-			dialog.show();
+
+    private void endGame(boolean success) {
+        if (success) {
+            GameManager.getInstance().updateScore(gameDifficulty.getSurvivalScore());
+
+            StringBuilder strBuilder = new StringBuilder();
+            strBuilder.append("You have survived!\n");
+            strBuilder.append("Your score so far is ");
+            strBuilder.append(GameManager.getInstance().getCurrentScore());
+            strBuilder.append(".");
+
+            AlertDialog.Builder successAlert = new AlertDialog.Builder(this);
+            successAlert.setMessage(strBuilder.toString()).setCancelable(true).setPositiveButton("Continue", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface arg0, int arg1) {
+                    ShootingGameActivity.this.finish();
+                }
+            });
+            AlertDialog dialog = successAlert.create();
+            dialog.show();
+        } else {
+            finish();
 		}
-		finish();
 	}
 }

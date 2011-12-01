@@ -1,9 +1,9 @@
 package ucf.chickenzombiebonanza.game;
 
 public enum DifficultyEnum {
-	EASY(10000, 5, 25, 100, 50, 1000),
-	MEDIUM(7000, 10, 30, 75, 70, 2500),
-	HARD(5000, 15, 40, 50, 100, 5000);
+	EASY(10000, 5, 1, 100, 50, 1000),
+	MEDIUM(7000, 10, 1, 75, 70, 2500),
+	HARD(5000, 15, 1, 50, 100, 5000);
 	
 	private final int enemySpawnFrequency;
 	
