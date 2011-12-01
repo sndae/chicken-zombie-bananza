@@ -64,15 +64,17 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View.OnClickListener;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.view.View;
 import android.view.View.OnTouchListener;
 import android.view.GestureDetector.OnDoubleTapListener;
+import android.widget.Button;
 
 
 
-public class PlayAreaActivity extends AbstractGameMapActivity   {
+public class PlayAreaActivity extends AbstractGameMapActivity  {
 
 	
 	
@@ -80,13 +82,22 @@ public class PlayAreaActivity extends AbstractGameMapActivity   {
 	private MapView mapView;
 	GeoPoint p;
 	private boolean touchStarted = false;
-	double latitude, longitude;
-	double initX = 0, initY = 0;
+	public static double latitude = 0, longitude = 0;
+	public static double initX = 0, initY = 0;
+    static int area = 0;
     
     public void onCreate(Bundle bundle) {
 		super.onCreate(bundle);
 		setContentView(R.layout.main);
 
+		final EditText Level = (EditText) findViewById(R.id.Level);
+		final EditText score = (EditText) findViewById(R.id.score);
+		Level.setVisibility(View.GONE);
+		score.setVisibility(View.GONE);
+		final TextView textView1 = (TextView) findViewById(R.id.textView1);
+		final TextView textView2 = (TextView) findViewById(R.id.textView2);
+		textView1.setVisibility(View.GONE);
+		textView2.setVisibility(View.GONE);
 		
 		// create a map view
 		mapView = (MapView) findViewById(R.id.mapview);
@@ -101,9 +112,8 @@ public class PlayAreaActivity extends AbstractGameMapActivity   {
 		
 		mapView.setSatellite(!mapView.isSatellite());
 		mapView.postInvalidate();
-		centerOnLocation();
+		centerOnPlayArea();
 		
-
 	    mapOverlay myOverlay = new mapOverlay();
 	    List<Overlay> overlays = mapView.getOverlays();        
 	    overlays.add(myOverlay);
@@ -130,34 +140,73 @@ public class PlayAreaActivity extends AbstractGameMapActivity   {
             else if (event.getAction() == MotionEvent.ACTION_UP) {
             	
             		if (touchStarted == true) {
-                GeoPoint p=mapview.getProjection().fromPixels((int)event.getX(), (int)event.getY());
+            		GeoPoint p=mapview.getProjection().fromPixels((int)event.getX(), (int)event.getY());
+                	latitude = p.getLatitudeE6()/1E6;
+                    longitude = p.getLongitudeE6()/1E6;
                 
-                latitude = p.getLatitudeE6()/1E6;
-                longitude = p.getLongitudeE6()/1E6;
-                initX = p.getLatitudeE6()/1E6;
-                initY = p.getLongitudeE6()/1E6;
-                Toast.makeText(getBaseContext(),p.getLatitudeE6()/1E6 + "," + p.getLongitudeE6()/1E6, Toast.LENGTH_SHORT).show();
+                //Create Dialog Box
+                
+                AlertDialog.Builder alertbox = new AlertDialog.Builder(PlayAreaActivity.this);
+                
+                
+                
+                // Set the message  to display
+                
+                alertbox.setMessage("Would you like this to be your new center of the play area?");
+                
+                //Create a listener
+                
+                alertbox.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                
+                	//Click Listener
+                
+                	public void onClick(DialogInterface arg0, int arg1) {
+                		
+                		Toast.makeText(getApplicationContext(), "New center has been selected", Toast.LENGTH_SHORT).show();
+                        centerOnPlayArea();	
+                	}
 
+
+            		});
+                
+                //Makes No button
+                
+                alertbox.setNegativeButton("No", new DialogInterface.OnClickListener() {
+					
+					
+					public void onClick(DialogInterface dialog, int which) {
+						latitude = initX;
+            			longitude = initY;
+						Toast.makeText(getApplicationContext(), "No new center chosen", Toast.LENGTH_SHORT).show();
+					}
+				});
+                
+                //Display Box
+                alertbox.show();
+                
             	}
+            		
             }
             return false;
         }
     }
-     
-   
-   
+    
+    
+
+    
+
 
 	@Override
 	protected boolean isRouteDisplayed() {
 		return false;
 	}
 	
-	private void centerOnLocation() {
+	private void centerOnPlayArea() {
 		
 		
 		if (latitude != 0 || longitude != 0 && (initX != 0 && initY !=0)) {
 			
-			mapController.animateTo(new GeoPoint((int)(latitude * 1E6), (int)(longitude * 1E6)));	
+			mapController.animateTo(new GeoPoint((int)(latitude * 1E6), (int)(longitude * 1E6)));
 			initX = latitude;
 			initY = longitude;
 			}
@@ -170,8 +219,20 @@ public class PlayAreaActivity extends AbstractGameMapActivity   {
 		Gdc_Coord_3d gdc = new Gdc_Coord_3d();
 		Gcc_To_Gdc_Converter.Convert(gcc, gdc); 
 		mapController.animateTo(new GeoPoint((int)(gdc.latitude * 1E6), (int)(gdc.longitude * 1E6)));	
+		
+		latitude = gdc.latitude;
+		longitude = gdc.longitude;
 		}
 		
+	}
+	
+	private void centerOnLocation() {
+		GeocentricCoordinate pt = GameManager.getInstance().getPlayerEntity().getPosition();
+		Gcc_To_Gdc_Converter.Init(new WE_Ellipsoid());
+		Gcc_Coord_3d gcc = new Gcc_Coord_3d(pt.getX(), pt.getY(), pt.getZ());
+		Gdc_Coord_3d gdc = new Gdc_Coord_3d();
+		Gcc_To_Gdc_Converter.Convert(gcc, gdc);
+		mapController.animateTo(new GeoPoint((int) (gdc.latitude * 1E6), (int) (gdc.longitude * 1E6)));
 	}
 	
 	
@@ -184,8 +245,9 @@ public class PlayAreaActivity extends AbstractGameMapActivity   {
 
 			}
 			
-			else if (keyCode == KeyEvent.KEYCODE_C) {
-				centerOnLocation();
+			else if (keyCode == KeyEvent.KEYCODE_SPACE) {
+				centerOnPlayArea();
+				return true;
 			}
 			
 			else if (keyCode == KeyEvent.KEYCODE_BACK) {
@@ -193,8 +255,13 @@ public class PlayAreaActivity extends AbstractGameMapActivity   {
 				finish();
 			}
 			
+			else if (keyCode == KeyEvent.KEYCODE_C){
+				centerOnLocation();
+				return true;
+			}
+			
 			return (super.onKeyDown(keyCode, e));
 		}
 		
-		
+
 }
