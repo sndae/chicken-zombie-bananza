@@ -2,7 +2,7 @@ package ucf.chickenzombiebonanza.game.item;
 
 public class WeaponInventoryObject extends InventoryObject {
 	
-	public static final WeaponInventoryObject PISTOL_WEAPON = new WeaponInventoryObject("Pistol", 10, 1.0f, 9999);
+	public static final WeaponInventoryObject PISTOL_WEAPON = new WeaponInventoryObject("Pistol", 10, 1.0f, 200);
 	
 	public static final WeaponInventoryObject REVOLVER_WEAPON = new WeaponInventoryObject("Revolver", 30, 1.5f, 30);
 	
@@ -37,12 +37,17 @@ public class WeaponInventoryObject extends InventoryObject {
 		currentAmmo += amount;
 	}
 	
-	public boolean fire() {
+	public boolean use() {
 		if(currentAmmo > 0) {
 			currentAmmo -= 1;
 			return true;
 		}
 		return false;
+	}
+	
+	@Override
+	public String toString() {
+		return "WeaponInventoryObject [" + super.toString() + ", Ammo: " + currentAmmo + "]"; 
 	}
 	
 }

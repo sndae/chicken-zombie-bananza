@@ -8,7 +8,10 @@ import ucf.chickenzombiebonanza.common.LocalOrientation;
 import ucf.chickenzombiebonanza.common.sensor.OrientationPublisher;
 import ucf.chickenzombiebonanza.common.sensor.PositionPublisher;
 import ucf.chickenzombiebonanza.game.item.HasInventory;
+import ucf.chickenzombiebonanza.game.item.HealthInventoryObject;
 import ucf.chickenzombiebonanza.game.item.InventoryObject;
+import ucf.chickenzombiebonanza.game.item.WeaponInventoryObject;
+import ucf.chickenzombiebonanza.game.item.InventoryObject.InventoryObjectTypeEnum;
 
 /**
  * @author Jolene
@@ -48,6 +51,11 @@ public class LifeformEntity extends GameEntity implements HasInventory {
 		return state;
 	}
 	
+	public void setMaxHealth(int maxHealth) {
+		this.maxHealth = maxHealth;
+		setHealth(currentHealth);
+	}
+	
 	private void setHealth(int currentHealth){
 		this.currentHealth = currentHealth > maxHealth ? maxHealth : currentHealth;
 	}
@@ -80,11 +88,30 @@ public class LifeformEntity extends GameEntity implements HasInventory {
 
 	@Override
 	public boolean addItem(InventoryObject item) {
-		if(!isEnemy()) {
-    		synchronized(inventory) {
-    			inventory.add(item);
-    		}
-    		return true;
+		if (!isEnemy()) {
+			if (item.getType() == InventoryObjectTypeEnum.WEAPON) {
+				WeaponInventoryObject addWeapon = (WeaponInventoryObject) item;
+				for (WeaponInventoryObject i : getWeapons()) {
+					if (item.equals(i)) {
+						i.addAmmo(addWeapon.getAmmoLeft());
+						return true;
+					}
+				}
+				
+			} else if (item.getType() == InventoryObjectTypeEnum.HEALTH) {
+				HealthInventoryObject addHealth = (HealthInventoryObject) item;
+				for (HealthInventoryObject i : getHealthPacks()) {
+					if (item.equals(i)) {
+						i.incrementCount(addHealth.getCount());
+						return true;
+					}
+				}
+			}
+			
+			synchronized (inventory) {
+				inventory.add(item);
+			}
+			return true;
 		}
 		return false;
 	}
@@ -107,5 +134,29 @@ public class LifeformEntity extends GameEntity implements HasInventory {
 	
 	public void healEntity(int amount) {
 		setHealth(currentHealth + amount);
+	}
+	
+	public List<WeaponInventoryObject> getWeapons() {
+		List<WeaponInventoryObject> weapons = new ArrayList<WeaponInventoryObject>();
+		synchronized(inventory) {
+			for(InventoryObject i : inventory) {
+				if(i.getType() == InventoryObjectTypeEnum.WEAPON) {
+					weapons.add((WeaponInventoryObject)i);
+				}
+			}
+		}
+		return weapons;
+	}
+	
+	public List<HealthInventoryObject> getHealthPacks() {
+		List<HealthInventoryObject> healthPacks = new ArrayList<HealthInventoryObject>();
+		synchronized(inventory) {
+			for(InventoryObject i : inventory) {
+				if(i.getType() == InventoryObjectTypeEnum.HEALTH) {
+					healthPacks.add((HealthInventoryObject)i);
+				}
+			}
+		}
+		return healthPacks;
 	}
 }

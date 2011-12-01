@@ -34,6 +34,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import android.util.Log;
+
 import ucf.chickenzombiebonanza.ShootingGameActivity;
 import ucf.chickenzombiebonanza.common.GeocentricCoordinate;
 import ucf.chickenzombiebonanza.common.LocalOrientation;
@@ -91,6 +93,7 @@ public class GameManager implements GameSettingsChangeListener, GameEntityStateL
 		updateGameState(GameStateEnum.GAME_LOADING);
 		
 		playerEntity = new LifeformEntity(false, 20, positionPublisher, orientationPublisher);
+		playerEntity.addItem(WeaponInventoryObject.PISTOL_WEAPON);
 		playerEntity.registerGameEntityStateListener(this);
 
 		final AtomicBoolean loadingScreenDurationMet = new AtomicBoolean(false);
@@ -151,8 +154,10 @@ public class GameManager implements GameSettingsChangeListener, GameEntityStateL
 	 * @param obj
 	 */
 	public void updateGameState(GameStateEnum state, Object obj) {
-		for (GameStateListener i : stateListeners) {
-			i.gameStateChanged(state, obj);
+		synchronized(stateListeners) {
+    		for (GameStateListener i : stateListeners) {
+    			i.gameStateChanged(state, obj);
+    		}
 		}
 	}
 
@@ -166,7 +171,8 @@ public class GameManager implements GameSettingsChangeListener, GameEntityStateL
 	
 	public void addEnemy(GeocentricCoordinate gameCenter, float minRadius, float maxRadius) {
 		GeocentricCoordinate randomCoordinate = GeocentricCoordinate.randomPointAround(gameCenter, maxRadius, minRadius);
-        GameEntity newEnemy = new LifeformEntity(true, 5, randomCoordinate, new LocalOrientation());
+        int enemyHealth = GameManager.getInstance().getGameSettings().getGameDifficulty().getEnemyHealth();
+		GameEntity newEnemy = new LifeformEntity(true, enemyHealth, randomCoordinate, new LocalOrientation());
         addGameEntity(newEnemy);
 	}
 	
@@ -246,7 +252,11 @@ public class GameManager implements GameSettingsChangeListener, GameEntityStateL
 	 *            The object to receive notifications
 	 */
 	public void addStateListener(GameStateListener listener) {
-		stateListeners.add(listener);
+		synchronized(stateListeners) {
+			if(!stateListeners.contains(listener)) {
+				stateListeners.add(listener);
+			}
+		}
 	}
 
 	/**
@@ -256,7 +266,9 @@ public class GameManager implements GameSettingsChangeListener, GameEntityStateL
 	 *            The object that receives notifications
 	 */
 	public void removeStateListener(GameStateListener listener) {
-		stateListeners.add(listener);
+		synchronized(stateListeners) {
+			stateListeners.remove(listener);
+		}
 	}
 
 	public void registerGameEntityListener(GameEntityListener listener) {
@@ -299,7 +311,7 @@ public class GameManager implements GameSettingsChangeListener, GameEntityStateL
 
 	@Override
 	public void onGameDifficultyChanged(DifficultyEnum difficulty) {
-
+		playerEntity.setMaxHealth(getGameSettings().getGameDifficulty().getPlayerHealth());
 	}
 
 	private class GameEntityListenerData {
