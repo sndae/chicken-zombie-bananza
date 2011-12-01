@@ -45,27 +45,48 @@ import com.google.android.maps.MapView;
 import com.google.android.maps.Overlay;
 import com.google.android.maps.OverlayItem;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 
+import android.graphics.Canvas;
+import android.graphics.Point;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.GestureDetector;
+import android.view.GestureDetector.OnGestureListener;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
+import android.view.View.OnClickListener;
+import android.widget.TextView;
+import android.widget.Toast;
+import android.view.View;
+import android.view.View.OnTouchListener;
+import android.view.GestureDetector.OnDoubleTapListener;
 
 
-public class PlayAreaActivity extends AbstractGameMapActivity implements PositionListener {
 
+public class PlayAreaActivity extends AbstractGameMapActivity   {
+
+	
+	
 	private MapController mapController;
 	private MapView mapView;
-	
+	GeoPoint p;
+	private boolean touchStarted = false;
+	double latitude, longitude;
+	double initX = 0, initY = 0;
     
     public void onCreate(Bundle bundle) {
 		super.onCreate(bundle);
 		setContentView(R.layout.main);
+
 		
 		// create a map view
 		mapView = (MapView) findViewById(R.id.mapview);
@@ -81,33 +102,77 @@ public class PlayAreaActivity extends AbstractGameMapActivity implements Positio
 		mapView.setSatellite(!mapView.isSatellite());
 		mapView.postInvalidate();
 		centerOnLocation();
-	}
-	
+		
+
+	    mapOverlay myOverlay = new mapOverlay();
+	    List<Overlay> overlays = mapView.getOverlays();        
+	    overlays.add(myOverlay);
+
+    }
+    
+    class mapOverlay extends com.google.android.maps.Overlay{
+        @Override
+
+        public boolean onTouchEvent(MotionEvent event, MapView mapview){
+
+            if (event.getAction()== 0){
+       
+            	touchStarted = true;
+          //  GeoPoint p=mapview.getProjection().fromPixels((int)event.getX(), (int)event.getY());
+                
+            }
+            else if (event.getAction() == MotionEvent.ACTION_MOVE) {
+                
+            	touchStarted = false;
+            	
+            }
+            
+            else if (event.getAction() == MotionEvent.ACTION_UP) {
+            	
+            		if (touchStarted == true) {
+                GeoPoint p=mapview.getProjection().fromPixels((int)event.getX(), (int)event.getY());
+                
+                latitude = p.getLatitudeE6()/1E6;
+                longitude = p.getLongitudeE6()/1E6;
+                initX = p.getLatitudeE6()/1E6;
+                initY = p.getLongitudeE6()/1E6;
+                Toast.makeText(getBaseContext(),p.getLatitudeE6()/1E6 + "," + p.getLongitudeE6()/1E6, Toast.LENGTH_SHORT).show();
+
+            	}
+            }
+            return false;
+        }
+    }
+     
+   
+   
+
 	@Override
 	protected boolean isRouteDisplayed() {
 		return false;
 	}
 	
-	
-	
-	@Override
-	public void receivePositionUpdate(GeocentricCoordinate pt) {
-		Gcc_To_Gdc_Converter.Init(new WE_Ellipsoid());
-		Gcc_Coord_3d gcc = new Gcc_Coord_3d(pt.getX(),pt.getY(),pt.getZ());
-		Gdc_Coord_3d gdc = new Gdc_Coord_3d();
-		Gcc_To_Gdc_Converter.Convert(gcc, gdc);
-		mapController.animateTo(new GeoPoint((int)(gdc.latitude * 1E6), (int)(gdc.longitude * 1E6)));	
-	}
-	
 	private void centerOnLocation() {
+		
+		
+		if (latitude != 0 || longitude != 0 && (initX != 0 && initY !=0)) {
+			
+			mapController.animateTo(new GeoPoint((int)(latitude * 1E6), (int)(longitude * 1E6)));	
+			initX = latitude;
+			initY = longitude;
+			}
+		        		
+		else if (initX == 0 && initY ==0) {
 		GeocentricCoordinate pt = GameManager.getInstance().getPlayerEntity().getPosition();
 
 		Gcc_To_Gdc_Converter.Init(new WE_Ellipsoid());
 		Gcc_Coord_3d gcc = new Gcc_Coord_3d(pt.getX(),pt.getY(),pt.getZ());
 		Gdc_Coord_3d gdc = new Gdc_Coord_3d();
-		Gcc_To_Gdc_Converter.Convert(gcc, gdc);
+		Gcc_To_Gdc_Converter.Convert(gcc, gdc); 
 		mapController.animateTo(new GeoPoint((int)(gdc.latitude * 1E6), (int)(gdc.longitude * 1E6)));	
-	        }
+		}
+		
+	}
 	
 	
 	// when you push the s key it will go to satellite view and back
@@ -122,8 +187,14 @@ public class PlayAreaActivity extends AbstractGameMapActivity implements Positio
 			else if (keyCode == KeyEvent.KEYCODE_C) {
 				centerOnLocation();
 			}
+			
+			else if (keyCode == KeyEvent.KEYCODE_BACK) {
+				GameManager.getInstance().updateGameState(GameStateEnum.GAME_SETTINGS);
+				finish();
+			}
+			
 			return (super.onKeyDown(keyCode, e));
 		}
-	
-	
+		
+		
 }
