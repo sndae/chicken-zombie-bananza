@@ -43,6 +43,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.Toast;
 
 /**
  * 
@@ -61,9 +62,10 @@ public final class GameSettingsActivity extends AbstractGameActivity {
 		Button showPlayAreaButton = (Button) findViewById(R.id.playAreaButton);
 		final EditText playAreaRadius = (EditText) findViewById(R.id.playAreaRadius);
 		//EditText playAreaWidth = (EditText) findViewById(R.id.playAreaWidth); Gone now
-		final AlertDialog alertDialog;
-		alertDialog = new AlertDialog.Builder(this).create();
+		//final AlertDialog alertDialog;
+		//alertDialog = new AlertDialog.Builder(GameSettingsActivity.this).create();
 		//This probably shouldn't be here
+		//GameManager.getInstance().getGameSettings().setPlayAreaRadius(5);
 		
 		
 		
@@ -134,23 +136,59 @@ public final class GameSettingsActivity extends AbstractGameActivity {
 			@Override
 			public void onClick(View arg0) {
 				
-				alertDialog.setTitle("Settings saved");//THIS DOESNT SAVE ANYTHING YET!
+				 // Create the dialog box
+
+	            AlertDialog.Builder alertbox = new AlertDialog.Builder(GameSettingsActivity.this);
+				
+	            alertbox.setTitle("Settings saved");//THIS DOESNT SAVE ANYTHING YET!
 				GameManager.getInstance().getGameSettings().setGameDifficulty(Difficulty);
+				
+				
 				
 				Editable radiusConvert = playAreaRadius.getText();//Gets the radius from the textbox
 				String radiusString = radiusConvert.toString();//Converts the Radius to a String
-				Float radiusValue = new Float(radiusString);//Sets radius to a float value
+				final Float radiusValue = new Float(radiusString);
 				
-				GameManager.getInstance().getGameSettings().setPlayAreaRadius(radiusValue);//Sets the play area to the radius value.
+				String blankTemp = "";
+				
+				//if(radiusValue > 0.0f && radiusValue < 500.0f)
+				if(!radiusString.equals(blankTemp))
+				{
+					//radiusValue = new Float("5");//Sets radius to a float value
+					GameManager.getInstance().getGameSettings().setPlayAreaRadius(radiusValue);
+				}
+				else
+				{
+					GameManager.getInstance().getGameSettings().setPlayAreaRadius(5);
+				}
+				
+				
+				GameManager.getInstance().getGameSettings().setPlayAreaRadius(radiusValue);
+				
+				alertbox.setPositiveButton("Done", new DialogInterface.OnClickListener() {
+
+	                // Click listener 
+
+	                public void onClick(DialogInterface arg0, int arg1) {
+	                	
+	                	
+
+	                    Toast.makeText(getApplicationContext(), "Saved...", Toast.LENGTH_SHORT).show();
+
+	                }
+
+	            });
+				
+				//GameManager.getInstance().getGameSettings().setPlayAreaRadius(radiusValue);//Sets the play area to the radius value.
 				
 				// Acquire a reference to the system Location Manager
 				//LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
 				
-				alertDialog.setMessage("The Difficulty is now "+ GameManager.getInstance().getGameSettings().getGameDifficulty() + "\n The Radius is now " 
+				alertbox.setMessage("The Difficulty is now "+ GameManager.getInstance().getGameSettings().getGameDifficulty() + "\n The Radius is now " 
 				+ GameManager.getInstance().getGameSettings().getPlayAreaRadius());
 				
 				
-				alertDialog.show();
+				alertbox.show();
 				
 			}
 		});
