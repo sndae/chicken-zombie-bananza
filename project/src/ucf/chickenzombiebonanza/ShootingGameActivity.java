@@ -45,6 +45,7 @@ import ucf.chickenzombiebonanza.game.entity.GameEntityListener;
 import ucf.chickenzombiebonanza.game.entity.GameEntityStateListener;
 import ucf.chickenzombiebonanza.game.entity.GameEntityTagEnum;
 import ucf.chickenzombiebonanza.game.entity.LifeformEntity;
+import ucf.chickenzombiebonanza.game.entity.LifeformHealthListener;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -55,14 +56,18 @@ import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.PowerManager;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
+import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.TextView;
 
 /**
  * 
  */
-public class ShootingGameActivity extends AbstractGameActivity implements GameEntityListener, GameEntityStateListener, OrientationListener {
+public class ShootingGameActivity extends AbstractGameActivity implements GameEntityListener, GameEntityStateListener, OrientationListener, LifeformHealthListener {
 	
     private final List<GameEntity> gameEntities = new ArrayList<GameEntity>();
     
@@ -82,6 +87,21 @@ public class ShootingGameActivity extends AbstractGameActivity implements GameEn
 	private int enemyDestroyedCount = 0;
 	
 	private final Handler handler = new Handler();
+	
+	private TextView healthTextView;
+	
+    private String healthString;
+    
+    private final Runnable updatePlayerHealth = new Runnable() {
+        @Override
+        public void run() {
+            if (healthTextView == null) {
+                healthTextView = (TextView) findViewById(R.id.healthTextView);
+            }
+            healthTextView.setText(healthString);
+            healthTextView.invalidate();
+        }
+    };
 	
     private final Runnable endGameSuccessRunnable = new Runnable() {
         @Override
@@ -158,6 +178,14 @@ public class ShootingGameActivity extends AbstractGameActivity implements GameEn
         renderer = new ShootingGameGLES20Renderer(this);
         glView = new ShootingGameSurfaceView(this);
         setContentView(glView);
+        
+        LayoutInflater inflater = (LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        View overlayView = inflater.inflate(R.layout.shootinggameoverlaylayout, null);
+        
+        healthTextView = (TextView)overlayView.findViewById(R.id.healthTextView);
+        
+        addContentView(overlayView, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
+        
         		
 		PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
         wakeLock = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK, "DoNotDimScreen");
@@ -169,6 +197,8 @@ public class ShootingGameActivity extends AbstractGameActivity implements GameEn
         GameManager.getInstance().getPlayerEntity().getOrientationPublisher().registerForOrientationUpdates(this);
         GameManager.getInstance().registerGameEntityListener(this, new GameEntityTagEnum[] { GameEntityTagEnum.LIFEFORM });
         GameManager.getInstance().getPlayerEntity().registerGameEntityStateListener(this);
+        GameManager.getInstance().getPlayerEntity().registerHealthListener(this);
+        GameManager.getInstance().getPlayerEntity().updateHealthListener(this);
         final ProgressDialog dialog = ProgressDialog.show(this, "Waiting for player position", "Waiting for GPS position...", true);
         Thread loadThread = new Thread() {
             @Override
@@ -215,6 +245,7 @@ public class ShootingGameActivity extends AbstractGameActivity implements GameEn
         GameManager.getInstance().unregisterGameEntityListener(this);
         GameManager.getInstance().getPlayerEntity().getOrientationPublisher().unregisterForOrientationUpdates(this);
         GameManager.getInstance().getPlayerEntity().unregisterGameEntityStateListener(this);
+        GameManager.getInstance().getPlayerEntity().unregisterHealthListener(this);
         moveEntityThread.cancel();
     }
 	
@@ -277,10 +308,32 @@ public class ShootingGameActivity extends AbstractGameActivity implements GameEn
     				}
 			    }
             }
-        }
+		}
+		
+		MediaPlayer mp = MediaPlayer.create(this, R.raw.gunfire);   
+        mp.start();
+        mp.setOnCompletionListener(new OnCompletionListener() {
+
+            @Override
+            public void onCompletion(MediaPlayer mp) {
+                mp.release();
+            }
+        });
 
         for (LifeformEntity i : damagedEntities) {
             i.damageEntity(5);
+        }
+        
+        if(!damagedEntities.isEmpty()) {
+    		mp = MediaPlayer.create(this, R.raw.chicken);   
+            mp.start();
+            mp.setOnCompletionListener(new OnCompletionListener() {
+
+                @Override
+                public void onCompletion(MediaPlayer mp) {
+                    mp.release();
+                }
+            });
         }
     }
 
@@ -388,5 +441,11 @@ public class ShootingGameActivity extends AbstractGameActivity implements GameEn
         } else {
             finish();
 		}
+	}
+
+	@Override
+	public void onLifeformHealthChange(int currentHealth, int maxHealth) {
+        healthString = "Health: " + currentHealth + " / " + maxHealth;
+        handler.post(updatePlayerHealth);
 	}
 }
