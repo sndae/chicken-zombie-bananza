@@ -424,6 +424,9 @@ public class NavigationGameActivity extends AbstractGameMapActivity implements P
             i.destroyEntity();
         }
         GameManager.getInstance().addWaypoint();
+        GameManager.getInstance().addWaypoint();
+        GameManager.getInstance().addPowerUp();
+        GameManager.getInstance().addPowerUp();
         GameManager.getInstance().addPowerUp();
     }
 

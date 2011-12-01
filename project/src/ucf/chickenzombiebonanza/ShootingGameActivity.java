@@ -49,6 +49,8 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.media.MediaPlayer;
+import android.media.MediaPlayer.OnCompletionListener;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.os.Handler;
@@ -274,14 +276,14 @@ public class ShootingGameActivity extends AbstractGameActivity implements GameEn
     				    damagedEntities.add((LifeformEntity)i);
     				}
 			    }
-			}
-		}
-		
-		for(LifeformEntity i : damagedEntities) {
-		    i.damageEntity(5);
-		}
-	}
-	
+            }
+        }
+
+        for (LifeformEntity i : damagedEntities) {
+            i.damageEntity(5);
+        }
+    }
+
 	private class ShootingGameSurfaceView extends GLSurfaceView {
 		public ShootingGameSurfaceView(Context context) {
 			super(context);
@@ -355,7 +357,7 @@ public class ShootingGameActivity extends AbstractGameActivity implements GameEn
             @Override
             public void run() {
             	if(spawnEnemyBoolean.get()) {
-            		GameManager.getInstance().addEnemy(getGameLocation(), 8, 3);
+            		GameManager.getInstance().addEnemy(getGameLocation(), 7, 4);
             	}
             }
             
