@@ -27,14 +27,10 @@
 package ucf.chickenzombiebonanza;
 
 import ucf.chickenzombiebonanza.game.GameManager;
-import ucf.chickenzombiebonanza.game.GameSettings;
 import ucf.chickenzombiebonanza.game.GameStateEnum;
 import ucf.chickenzombiebonanza.game.DifficultyEnum;
 import android.app.AlertDialog;
-import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
-import android.location.LocationManager;
 import android.os.Bundle;
 import android.text.Editable;
 import android.view.View;

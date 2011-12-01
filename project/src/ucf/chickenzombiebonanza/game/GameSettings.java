@@ -39,9 +39,9 @@ public class GameSettings {
 	private GeocentricCoordinate playAreaCenter = null;
 
 	// In meters
-	private float playAreaRadius = 0.0f;
+	private float playAreaRadius = 200.0f;
 	
-	private DifficultyEnum gameDifficulty = DifficultyEnum.EASY;
+	private DifficultyEnum gameDifficulty = DifficultyEnum.MEDIUM;
 
 	private final List<GameSettingsChangeListener> listeners = new ArrayList<GameSettingsChangeListener>();
 

@@ -88,15 +88,6 @@ public class PlayAreaActivity extends AbstractGameMapActivity  {
     public void onCreate(Bundle bundle) {
 		super.onCreate(bundle);
 		setContentView(R.layout.main);
-
-		final EditText Level = (EditText) findViewById(R.id.Level);
-		final EditText score = (EditText) findViewById(R.id.score);
-		Level.setVisibility(View.GONE);
-		score.setVisibility(View.GONE);
-		final TextView textView1 = (TextView) findViewById(R.id.textView1);
-		final TextView textView2 = (TextView) findViewById(R.id.textView2);
-		textView1.setVisibility(View.GONE);
-		textView2.setVisibility(View.GONE);
 		
 		// create a map view
 		mapView = (MapView) findViewById(R.id.mapview);
