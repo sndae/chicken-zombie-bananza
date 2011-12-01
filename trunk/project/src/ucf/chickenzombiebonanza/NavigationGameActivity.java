@@ -140,9 +140,9 @@ public class NavigationGameActivity extends AbstractGameMapActivity implements P
                 waypointOverlay = new WaypointNavigationOverlay(waypointDrawableIcon);
                 powerUpOverlay = new SimpleNavigationGameOverlay(powerUpDrawableIcon, "Power Up", "A player power up.");
 
-                mapOverlays.add(playerOverlay);
                 mapOverlays.add(waypointOverlay);
                 mapOverlays.add(powerUpOverlay);
+                mapOverlays.add(playerOverlay);
 
                 playerOverlay.updatePlayerOverlayItem(geocentricToGeopoint(position));
 
@@ -253,7 +253,11 @@ public class NavigationGameActivity extends AbstractGameMapActivity implements P
             playerOverlay.updatePlayerOverlayItem(playerPosition);
         }
         if (mapController != null) {
-            mapController.animateTo(playerPosition);
+        	try {
+        		mapController.animateTo(playerPosition);
+        	} catch (Exception e) {
+        		
+        	}
         }
     }
 

@@ -91,7 +91,8 @@ public class GameManager implements GameSettingsChangeListener, GameEntityStateL
 			final OrientationPublisher orientationPublisher) {
 		updateGameState(GameStateEnum.GAME_LOADING);
 		
-		playerEntity = new LifeformEntity(false, 20, positionPublisher, orientationPublisher);
+		playerEntity = new LifeformEntity(false, 200, positionPublisher, orientationPublisher);
+		playerEntity.damageEntity(100);
 		playerEntity.addItem(WeaponInventoryObject.PISTOL_WEAPON);
 		playerEntity.addItem(HealthInventoryObject.SMALL_HEALTH_KIT);
 		playerEntity.addItem(HealthInventoryObject.SMALL_HEALTH_KIT);
