@@ -62,6 +62,8 @@ public class GameManager implements GameSettingsChangeListener, GameEntityStateL
 	private final List<GameEntity> gameEntities = new ArrayList<GameEntity>();
 
 	private final List<GameEntityListenerData> gameEntityListeners = new ArrayList<GameEntityListenerData>();
+	
+	private final List<ScoreListener> scoreListeners = new ArrayList<ScoreListener>();
 
 	private final GameSettings gameSettings = new GameSettings();
 	
@@ -173,9 +175,9 @@ public class GameManager implements GameSettingsChangeListener, GameEntityStateL
         addGameEntity(newEnemy);
 	}
 	
-	public void addWaypoint(GeocentricCoordinate gameCenter) {
-		GeocentricCoordinate randomCoordinate = GeocentricCoordinate.randomPointAround(gameCenter, gameSettings.getPlayAreaRadius(), 0);
-		WaypointEntity newWaypoint = new WaypointEntity(10,randomCoordinate);
+	public void addWaypoint() {
+		GeocentricCoordinate randomCoordinate = GeocentricCoordinate.randomPointAround(gameSettings.getPlayAreaCenter(), gameSettings.getPlayAreaRadius(), 0);
+		WaypointEntity newWaypoint = new WaypointEntity(5.0f,randomCoordinate);
 		final int activationScore = (int)randomCoordinate.distanceFrom(getPlayerEntity().getPosition())*10;
 		newWaypoint.addActivationListener(new ObjectActivationListener(){
 			@Override
@@ -192,10 +194,10 @@ public class GameManager implements GameSettingsChangeListener, GameEntityStateL
 		addGameEntity(newWaypoint);
 	}
 	
-	public void addPowerUp(GeocentricCoordinate gameCenter) {
-		GeocentricCoordinate randomCoordinate = GeocentricCoordinate.randomPointAround(gameCenter, gameSettings.getPlayAreaRadius(), 0);
+	public void addPowerUp() {
+		GeocentricCoordinate randomCoordinate = GeocentricCoordinate.randomPointAround(gameSettings.getPlayAreaCenter(), gameSettings.getPlayAreaRadius(), 0);
 		InventoryObject randomItem = getRandomInventoryObject();
-		PowerUpEntity newPowerUp = new PowerUpEntity(randomItem, 10, randomCoordinate);
+		PowerUpEntity newPowerUp = new PowerUpEntity(randomItem, 5.0f, randomCoordinate);
 		newPowerUp.addActivationListener(new ObjectActivationListener() {
 			@Override
 			public boolean objectActivated(GameEntity activatedBy) {
@@ -335,6 +337,11 @@ public class GameManager implements GameSettingsChangeListener, GameEntityStateL
 	public void updateScore(int amount) {
 		if(amount > 0) {
 			currentScore += amount;
+	        synchronized (scoreListeners) {
+	            for(ScoreListener i : scoreListeners) {
+	                i.onScoreUpdated(getCurrentScore());
+	            }
+	        }
 		}
 	}
 	
@@ -349,5 +356,23 @@ public class GameManager implements GameSettingsChangeListener, GameEntityStateL
 		Random generator = new Random();
 		int index = generator.nextInt(items.length);
 		return items[index];
-	}
+    }
+
+    public void registerScoreListener(ScoreListener listener) {
+        synchronized (scoreListeners) {
+            if (!scoreListeners.contains(listener)) {
+                scoreListeners.add(listener);
+            }
+        }
+    }
+
+    public void unregisterScoreListener(ScoreListener listener) {
+        synchronized (scoreListeners) {
+            scoreListeners.remove(listener);
+        }
+    }
+    
+    public void updateScoreListener(ScoreListener listener) {
+        listener.onScoreUpdated(getCurrentScore());
+    }
 }

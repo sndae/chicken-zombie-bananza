@@ -53,6 +53,8 @@ public class LifeformEntity extends GameEntity implements HasInventory {
 	
 	private final List<InventoryObject> inventory = new ArrayList<InventoryObject>();
 	
+	private final List<LifeformHealthListener> healthListeners = new ArrayList<LifeformHealthListener>();
+	
 	public LifeformEntity(boolean isEnemy, int health, PositionPublisher positionPublisher, OrientationPublisher orientationPublisher) {
 		super(positionPublisher, orientationPublisher, GameEntityTagEnum.LIFEFORM);
 		this.isEnemy = isEnemy;
@@ -69,10 +71,6 @@ public class LifeformEntity extends GameEntity implements HasInventory {
 		this.state = LifeformEntityStateEnum.ALIVE;
 	}	
 	
-	int getHealth(){
-		return currentHealth;
-	}
-	
 	LifeformEntityStateEnum getStatus(){
 		return state;
 	}
@@ -84,6 +82,7 @@ public class LifeformEntity extends GameEntity implements HasInventory {
 	
 	private void setHealth(int currentHealth){
 		this.currentHealth = currentHealth > maxHealth ? maxHealth : currentHealth;
+		updateHealthListeners();
 	}
 	
 	public int getCurrentHealth() {
@@ -185,4 +184,30 @@ public class LifeformEntity extends GameEntity implements HasInventory {
 		}
 		return healthPacks;
 	}
+	
+	public void registerHealthListener(LifeformHealthListener listener) {
+	    synchronized(healthListeners) {
+	        if(!healthListeners.contains(listener)) {
+	            healthListeners.add(listener);
+	        }
+        }
+    }
+
+    public void unregisterHealthListener(LifeformHealthListener listener) {
+        synchronized (healthListeners) {
+            healthListeners.remove(listener);
+        }
+    }
+    
+    private void updateHealthListeners() {
+        synchronized (healthListeners) {
+            for(LifeformHealthListener i : healthListeners) {
+                i.onLifeformHealthChange(getCurrentHealth(), maxHealth);
+            }
+        }
+    }
+    
+    public void updateHealthListener(LifeformHealthListener listener) {
+        listener.onLifeformHealthChange(getCurrentHealth(), maxHealth);
+    }
 }

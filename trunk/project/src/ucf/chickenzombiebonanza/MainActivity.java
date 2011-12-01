@@ -43,10 +43,10 @@ public class MainActivity extends AbstractGameActivity {
 
         GameManager.getInstance().start(new GpsListener(this), new GyroscopeListener(this));
     }
-
+    
     @Override
-    public void onStop() {
-        super.onStop();
+    public void onPause() {
+        super.onPause();
         finish();
     }
 

@@ -12,4 +12,7 @@
     <string name="Apple">Apply</string>
     <string name="settingsText">Settings</string>
     <string name="shootingGameText">Shooting Game</string>
+    <string name="navigationgamescorelabel">Score:</string>
+    <string name="navigationgamehealthlabel">Health:</string>
+    <color name="black">#000000</color>
 </resources>

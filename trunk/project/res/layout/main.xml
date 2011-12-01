@@ -13,11 +13,7 @@
 	<LinearLayout android:id="@+id/linearLayout1" android:layout_height="134dp" android:weightSum="1" android:layout_width="142dp">
 	</LinearLayout>
 	<RelativeLayout android:id="@+id/relativeLayout1" android:layout_height="match_parent" android:layout_width="match_parent">
-		<EditText android:text="Level" android:id="@+id/Level" android:cursorVisible="false" android:layout_height="wrap_content" android:layout_width="116dp" android:layout_alignParentTop="true" android:layout_marginTop="26dp" android:editable="false" android:clickable="false">
-			<requestFocus></requestFocus>
-		</EditText>
-		<EditText android:text="Score" android:id="@+id/score" android:cursorVisible="false" android:layout_height="wrap_content" android:clickable="false" android:editable="false" android:layout_width="140dp" android:layout_alignBaseline="@+id/Level" android:layout_alignBottom="@+id/Level" android:layout_alignParentRight="true"></EditText>
-		<TextView android:id="@+id/textView2" android:layout_height="wrap_content" android:text="Score" android:layout_width="wrap_content" android:textAppearance="?android:attr/textAppearanceMedium" android:layout_above="@+id/score" android:layout_alignLeft="@+id/score" android:layout_marginLeft="47dp"></TextView>
-		<TextView android:id="@+id/textView1" android:layout_height="wrap_content" android:text="Level" android:layout_width="wrap_content" android:textAppearance="?android:attr/textAppearanceMedium" android:layout_alignParentTop="true" android:layout_alignParentLeft="true" android:layout_marginLeft="31dp"></TextView>
+		<TextView android:layout_height="wrap_content" android:layout_width="wrap_content" android:textAppearance="?android:attr/textAppearanceMedium" android:layout_alignParentLeft="true" android:layout_alignParentBottom="true" android:layout_alignParentTop="false" android:layout_marginBottom="15dp" android:layout_marginLeft="15dp" android:layout_marginTop="5dp" android:text="@string/navigationgamescorelabel" android:background="@color/black" android:width="150dp" android:id="@+id/scoreTextView"></TextView>
+		<TextView android:width="150dp" android:layout_height="wrap_content" android:background="@color/black" android:textAppearance="?android:attr/textAppearanceMedium" android:text="@string/navigationgamehealthlabel" android:layout_width="wrap_content" android:layout_above="@+id/scoreTextView" android:layout_alignLeft="@+id/scoreTextView" android:id="@+id/healthTextView"></TextView>
 	</RelativeLayout>
 </FrameLayout>

@@ -31,14 +31,25 @@ import geotransform.coords.Gdc_Coord_3d;
 import geotransform.ellipsoids.WE_Ellipsoid;
 import geotransform.transforms.Gcc_To_Gdc_Converter;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import ucf.chickenzombiebonanza.common.GeocentricCoordinate;
 import ucf.chickenzombiebonanza.common.sensor.PositionListener;
+import ucf.chickenzombiebonanza.game.DifficultyEnum;
 import ucf.chickenzombiebonanza.game.GameManager;
+import ucf.chickenzombiebonanza.game.GameSettingsChangeListener;
 import ucf.chickenzombiebonanza.game.GameStateEnum;
+import ucf.chickenzombiebonanza.game.ScoreListener;
+import ucf.chickenzombiebonanza.game.entity.GameEntity;
+import ucf.chickenzombiebonanza.game.entity.GameEntityListener;
+import ucf.chickenzombiebonanza.game.entity.GameEntityTagEnum;
+import ucf.chickenzombiebonanza.game.entity.LifeformHealthListener;
 
 import com.google.android.maps.GeoPoint;
+import com.google.android.maps.ItemizedOverlay;
 import com.google.android.maps.MapController;
 import com.google.android.maps.MapView;
 import com.google.android.maps.Overlay;
@@ -55,362 +66,387 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.widget.TextView;
 
 /**
  * 
  */
-public class NavigationGameActivity extends AbstractGameMapActivity implements PositionListener {
-	/** Called when the activity is first created. */
+public class NavigationGameActivity extends AbstractGameMapActivity implements PositionListener, GameEntityListener, GameSettingsChangeListener, LifeformHealthListener, ScoreListener {
+    /** Called when the activity is first created. */
 
-	private MapController mapController;
-	private MapView mapView;
-	
-	private static double lat;
-    private static double lon;
-	private List<Overlay> mapOverlays;
-    private Drawable drawable1;
-    private Drawable drawable2;
-    private Drawable drawable3;
-    private Drawable drawable4;
-    private MyItemizedOverlay itemizedOverlay1;
-    private MyItemizedOverlay itemizedOverlay2;
-    private MyItemizedOverlay itemizedOverlay3;
-    private MyItemizedOverlay itemizedOverlay4;
-    private int level;
-    private double multiplier1a = 1.000001;
-    private double multiplier1b = 1.000002;
-    private double multiplier1c = 1.000003;
-    private double multiplier1d = 1.000004;
-    public static double latitude = PlayAreaActivity.latitude, longitude = PlayAreaActivity.longitude;
-    public static double initX = PlayAreaActivity.initX, initY = PlayAreaActivity.initY;
+    private MapController mapController;
+    private MapView mapView;
+
+    private List<Overlay> mapOverlays;
+    private PlayerNavigationOverlay playerOverlay;
+    private WaypointNavigationOverlay waypointOverlay;
+    private SimpleNavigationGameOverlay powerUpOverlay;
+
+    private Drawable playerDrawableIcon;
+    private Drawable waypointDrawableIcon;
+    private Drawable powerUpDrawableIcon;
+    
+    private TextView healthTextView;
+    private TextView scoreTextView;
+
+    private final Map<GameEntity, OverlayItem> entityToOverlayItemMap = new HashMap<GameEntity, OverlayItem>();
 
     @Override
-	public void onCreate(Bundle bundle) {
-		super.onCreate(bundle);
-		setContentView(R.layout.main);
-		
-		// create a map view
-		mapView = (MapView) findViewById(R.id.mapview);
-		mapView.setBuiltInZoomControls(true);
-		mapView.setSatellite(false);
+    public void onCreate(Bundle bundle) {
+        super.onCreate(bundle);
+        setContentView(R.layout.main);
 
-		mapController = mapView.getController();
-		mapController.setZoom(21); // Zoom 1 is world view
-		latitude = PlayAreaActivity.latitude;
-		longitude = PlayAreaActivity.longitude;
-		initX = PlayAreaActivity.initX;
-		initY = PlayAreaActivity.initY;
+        // create a map view
+        mapView = (MapView) findViewById(R.id.mapview);
+        mapView.setBuiltInZoomControls(true);
+        mapView.setSatellite(true);
 
-		final ProgressDialog dialog = ProgressDialog.show(this, "Waiting for player position", "Waiting for GPS position...", true);
-		Thread loadThread = new Thread() {
-			@Override
-			public void run() {
-				GeocentricCoordinate position = GameManager.getInstance().getPlayerEntity().getPosition();
-				while (position == null || position.isZero()) {
-					synchronized (this) {
-						try {
-							
-							this.wait(10);
-						} catch (InterruptedException e) {
-						}
-					}
-					position = GameManager.getInstance().getPlayerEntity().getPosition();
-				}
-				dialog.dismiss();
+        mapController = mapView.getController();
+        mapController.setZoom(21); // Zoom 1 is world view
 
-				// if want satellite view this allows us to zoom in more as we
-				// will need for the map
-				mapView.setSatellite(!mapView.isSatellite());
+        final ProgressDialog dialog = ProgressDialog.show(this, "Waiting for player position", "Waiting for GPS position...", true);
+        Thread loadThread = new Thread() {
+            @Override
+            public void run() {
+                GeocentricCoordinate position = GameManager.getInstance().getPlayerEntity().getPosition();
+                while (position == null || position.isZero()) {
+                    synchronized (this) {
+                        try {
 
-				// need to make enemies appear in range of center point then
-				// move to it
-				level = 3;
+                            this.wait(10);
+                        } catch (InterruptedException e) {
+                        }
+                    }
+                    position = GameManager.getInstance().getPlayerEntity().getPosition();
+                }
+                dialog.dismiss();
 
-				// arraylist of posible enemy postions
-				OverlayItem[] enemy = {
-						new OverlayItem(new GeoPoint(
-								(int) ((multiplier1b * lat * 1e6)),
-								(int) ((lon * 1e6))), "enemy 1", "more details"),
-						new OverlayItem(new GeoPoint((int) ((lat * 1e6)),
-								(int) ((multiplier1a * lon * 1e6))), "enemy 1",
-								"more details"),
-						new OverlayItem(new GeoPoint(
-								(int) ((lat / multiplier1b * 1e6)),
-								(int) ((lon * 1e6))), "enemy 1", "more details"),
-						new OverlayItem(new GeoPoint((int) ((lat * 1e6)),
-								(int) (((lon / multiplier1a) * 1e6))),
-								"enemy 1", "more details"),
-						new OverlayItem(new GeoPoint(
-								(int) ((multiplier1d * lat * 1e6)),
-								(int) ((lon * 1e6))), "enemy 1", "more details"),
-						new OverlayItem(new GeoPoint((int) ((lat * 1e6)),
-								(int) ((multiplier1c * lon * 1e6))), "enemy 1",
-								"more details"),
-						new OverlayItem(new GeoPoint(
-								(int) ((lat / multiplier1d * 1e6)),
-								(int) ((lon * 1e6))), "enemy 1", "more details"),
-						new OverlayItem(new GeoPoint((int) ((lat * 1e6)),
-								(int) (((lon / multiplier1c) * 1e6))),
-								"enemy 1", "more details")
+                playerDrawableIcon = NavigationGameActivity.this.getResources().getDrawable(R.drawable.playermapicon);
+                waypointDrawableIcon = NavigationGameActivity.this.getResources().getDrawable(R.drawable.waypointmapicon);
+                powerUpDrawableIcon = NavigationGameActivity.this.getResources().getDrawable(R.drawable.powerupmapicon);
 
-				};
+                mapOverlays = mapView.getOverlays();
+                playerOverlay = new PlayerNavigationOverlay(playerDrawableIcon);
+                waypointOverlay = new WaypointNavigationOverlay(waypointDrawableIcon);
+                powerUpOverlay = new SimpleNavigationGameOverlay(powerUpDrawableIcon, "Power Up", "A player power up.");
 
-				OverlayItem[] powerups = {
-						new OverlayItem(new GeoPoint(
-								(int) ((multiplier1c * lat * 1e6)),
-								(int) ((lon * 1e6))), "enemy 1", "more details"),
-						new OverlayItem(new GeoPoint((int) ((lat * 1e6)),
-								(int) ((multiplier1b * lon * 1e6))), "enemy 1",
-								"more details"),
-						new OverlayItem(new GeoPoint(
-								(int) ((lat / multiplier1c * 1e6)),
-								(int) ((lon * 1e6))), "enemy 1", "more details"),
-						new OverlayItem(new GeoPoint((int) ((lat * 1e6)),
-								(int) (((lon / multiplier1b) * 1e6))),
-								"enemy 1", "more details")
+                mapOverlays.add(playerOverlay);
+                mapOverlays.add(waypointOverlay);
+                mapOverlays.add(powerUpOverlay);
 
-				};
+                playerOverlay.updatePlayerOverlayItem(geocentricToGeopoint(position));
 
-				OverlayItem[] waypoints = {
-						new OverlayItem(new GeoPoint(
-								(int) ((multiplier1d * lat * 1e6)),
-								(int) ((lon * 1e6))), "enemy 1", "more details"),
-						new OverlayItem(new GeoPoint((int) ((lat * 1e6)),
-								(int) ((multiplier1c * lon * 1e6))), "enemy 1",
-								"more details"),
-						new OverlayItem(new GeoPoint(
-								(int) ((lat / multiplier1d * 1e6)),
-								(int) ((lon * 1e6))), "enemy 1", "more details"),
-						new OverlayItem(new GeoPoint((int) ((lat * 1e6)),
-								(int) (((lon / multiplier1c) * 1e6))),
-								"enemy 1", "more details")
+                // this will refresh map i think?
+                mapView.postInvalidate();
 
-				};
-				
-				OverlayItem[] hero = { new OverlayItem(new GeoPoint(
-						(int) (lat * 1e6), (int) (lon * 1e6)), "hero 1",
-						"more details")
+                if (GameManager.getInstance().getGameSettings().getPlayAreaCenter() == null) {
+                    GameManager.getInstance().getGameSettings().setPlayAreaCenter(position);
+                    regeneratePlayArea();
+                }
 
-				};
+            }
+        };
 
-				mapOverlays = mapView.getOverlays();
-				drawable1 = NavigationGameActivity.this.getResources().getDrawable(
-						R.drawable.chickendrawing2);
-				itemizedOverlay1 = new MyItemizedOverlay(drawable1);
-				drawable2 = NavigationGameActivity.this.getResources().getDrawable(R.drawable.hero);
-				itemizedOverlay2 = new MyItemizedOverlay(drawable2);
-				drawable3 = NavigationGameActivity.this.getResources().getDrawable(R.drawable.powerup);
-				itemizedOverlay3 = new MyItemizedOverlay(drawable3);
-				drawable4 = NavigationGameActivity.this.getResources()
-						.getDrawable(R.drawable.waypoint);
-				itemizedOverlay4 = new MyItemizedOverlay(drawable4);
+        loadThread.start();
+    }
 
-				putHeroOnScreen(hero);
-				putEnemiesOnScreen(enemy);
-				putPowerupsOnScreen(powerups);
-				putWaypointsOnScreen(waypoints);
+    @Override
+    public void onStart() {
+        super.onStart();
+        GameManager.getInstance().registerGameEntityListener(this);
+        GameManager.getInstance().getGameSettings().registerGameSettingsChangeListener(this);
+        GameManager.getInstance().getPlayerEntity().registerHealthListener(this);
+        GameManager.getInstance().getPlayerEntity().updateHealthListener(this);
+        GameManager.getInstance().registerScoreListener(this);
+        GameManager.getInstance().updateScoreListener(this);
+    }
 
-				// this will refresh map i think?
-				mapView.postInvalidate();
-			}
-		};
+    @Override
+    public void onPause() {
+        super.onPause();
+        GameManager.getInstance().getPlayerEntity().getPositionPublisher().pauseSensor();
+        GameManager.getInstance().getPlayerEntity().getPositionPublisher().unregisterForPositionUpdates(this);
+    }
 
-		loadThread.start();
-	}
-	
-	@Override
-	public void onPause() {
-		super.onPause();
-		GameManager.getInstance().getPlayerEntity().getPositionPublisher().pauseSensor();
-		GameManager.getInstance().getPlayerEntity().getPositionPublisher().unregisterForPositionUpdates(this);
-	}
+    @Override
+    public void onResume() {
+        super.onResume();
+        GameManager.getInstance().getPlayerEntity().getPositionPublisher().resumeSensor();
+        GameManager.getInstance().getPlayerEntity().getPositionPublisher().registerForPositionUpdates(this);
+        if (GameManager.getInstance().getPlayerEntity().isDead()) {
+            onGameOver();
+        }
+    }
 
-	@Override
-	public void onResume() {
-		super.onResume();
-		GameManager.getInstance().getPlayerEntity().getPositionPublisher().resumeSensor();
-		GameManager.getInstance().getPlayerEntity().getPositionPublisher().registerForPositionUpdates(this);
-		if (GameManager.getInstance().getPlayerEntity().isDead()) {
-			onGameOver();
-		}
-	}
+    @Override
+    public void onStop() {
+        super.onStop();
+        GameManager.getInstance().unregisterGameEntityListener(this);
+        GameManager.getInstance().getGameSettings().unregisterGameSettingsChangeListener(this);
+        GameManager.getInstance().getPlayerEntity().unregisterHealthListener(this);
+        GameManager.getInstance().unregisterScoreListener(this);
+    }
 
-	@Override
-	public void onStop() {
-		super.onStop();
-	}
+    public boolean onKeyDown(int keyCode, KeyEvent e) {
+        // When you push the s key it will go to satellite view and back
+        if (keyCode == KeyEvent.KEYCODE_S) {
+            mapView.setSatellite(!mapView.isSatellite());
+            return true;
+        } else if (keyCode == KeyEvent.KEYCODE_C) {
+            centerOnLocation();
+            return true;
+        } else if (keyCode == KeyEvent.KEYCODE_SPACE) {
+            centerOnLocation();
+            return true;
+        }
 
-	private void putHeroOnScreen(OverlayItem[] hero) {
-		// add hero
-		for (int i = 0; i < 1; i++) {
-			itemizedOverlay2.addOverlay(hero[i]);
-		}
+        return super.onKeyDown(keyCode, e);
+    }
 
-		mapOverlays.add(itemizedOverlay2);
-	}
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.navigation_menu, menu);
+        return true;
+    }
 
-	private void putWaypointsOnScreen(OverlayItem[] waypoints) {
-		// add waypoints
-		for (int i = 0; i < 4; i++) {
-			itemizedOverlay4.addOverlay(waypoints[i]);
-		}
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle item selection
+        switch (item.getItemId()) {
+            case R.id.settingsoption:
+                GameManager.getInstance().updateGameState(GameStateEnum.GAME_SETTINGS);
+                return true;
+            case R.id.launchshootinggame:
+                GameManager.getInstance().updateGameState(GameStateEnum.GAME_SHOOTING);
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
 
-		mapOverlays.add(itemizedOverlay4);
-	}
+    @Override
+    public void onBackPressed() {
+        this.moveTaskToBack(true);
+    }
 
-	private void putPowerupsOnScreen(OverlayItem[] powerups) {
-		// add powerups
-		for (int i = 0; i < 4; i++) {
-			itemizedOverlay3.addOverlay(powerups[i]);
-		}
+    @Override
+    protected boolean isRouteDisplayed() {
+        return false;
+    }
 
-		mapOverlays.add(itemizedOverlay3);
-	}
+    @Override
+    public void receivePositionUpdate(GeocentricCoordinate pt) {
+        GeoPoint playerPosition = geocentricToGeopoint(pt);
+        if (playerOverlay != null) {
+            playerOverlay.updatePlayerOverlayItem(playerPosition);
+        }
+        if (mapController != null) {
+            mapController.animateTo(playerPosition);
+        }
+    }
 
-	private void putEnemiesOnScreen(OverlayItem[] enemy) {
+    private void centerOnLocation() {
+        GeocentricCoordinate pt = GameManager.getInstance().getPlayerEntity().getPosition();
+        if (mapController != null) {
+            mapController.animateTo(geocentricToGeopoint(pt));
+        }
+    }
 
-		if (level == 1) {
-			// add enemies
-			for (int i = 0; i < 4; i++) {
-				itemizedOverlay1.addOverlay(enemy[i]);
-			}
-			mapOverlays.add(itemizedOverlay1);
-		} else if (level == 2) {
-			// add enemies
-			for (int i = 0; i < 6; i++) {
-				itemizedOverlay1.addOverlay(enemy[i]);
-			}
-			mapOverlays.add(itemizedOverlay1);
-		} else if (level == 3) {
-			// add enemies
-			for (int i = 0; i < 8; i++) {
-				itemizedOverlay1.addOverlay(enemy[i]);
-			}
-			mapOverlays.add(itemizedOverlay1);
-		}
-	}
+    private void onGameOver() {
+        StringBuilder strBuilder = new StringBuilder();
+        strBuilder.append("You have died.\n");
+        strBuilder.append("Your score this session was ");
+        strBuilder.append(GameManager.getInstance().getCurrentScore());
+        strBuilder.append(".\n");
+        strBuilder.append("Would you like to try again?");
 
-	public boolean onKeyDown(int keyCode, KeyEvent e) {
-		// When you push the s key it will go to satellite view and back
-		if (keyCode == KeyEvent.KEYCODE_S) {
-			mapView.setSatellite(!mapView.isSatellite());
-			return true;
-		} else if (keyCode == KeyEvent.KEYCODE_C) {
-			centerOnLocation();
-			return true;
-		}
-		else if (keyCode == KeyEvent.KEYCODE_SPACE){
-			centerOnPlayArea();
-			return true;
-		}
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage(strBuilder.toString()).setCancelable(false).setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                GameManager.getInstance().restart();
+            }
+        }).setNegativeButton("Surrender", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                GameManager.getInstance().restart();
+                NavigationGameActivity.this.moveTaskToBack(true);
+            }
+        });
+        AlertDialog alert = builder.create();
+        alert.show();
+    }
 
-		return super.onKeyDown(keyCode, e);
-	}
+    @Override
+    public void onGameEntityAdded(GameEntity entity) {
+        OverlayItem overlayItem = null;
+        if (entity.getTag() == GameEntityTagEnum.WAYPOINT) {
+            overlayItem = waypointOverlay.addOverlayItem(geocentricToGeopoint(entity.getPosition()));
+        } else if (entity.getTag() == GameEntityTagEnum.POWER_UP) {
+            overlayItem = powerUpOverlay.addOverlayItem(geocentricToGeopoint(entity.getPosition()));
+        }
+        if (overlayItem != null) {
+            synchronized (entityToOverlayItemMap) {
+                entityToOverlayItemMap.put(entity, overlayItem);
+            }
+        }
+    }
 
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		MenuInflater inflater = getMenuInflater();
-		inflater.inflate(R.menu.navigation_menu, menu);
-		return true;
-	}
+    @Override
+    public void onGameEntityDeleted(GameEntity entity) {
+        synchronized (entityToOverlayItemMap) {
+            entityToOverlayItemMap.remove(entity);
+        }
+    }
 
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		// Handle item selection
-		switch (item.getItemId()) {
-			case R.id.settingsoption:
-				GameManager.getInstance().updateGameState(GameStateEnum.GAME_SETTINGS);
-				return true;
-			case R.id.launchshootinggame:
-				GameManager.getInstance().updateGameState(GameStateEnum.GAME_SHOOTING);
-				return true;
-			default:
-				return super.onOptionsItemSelected(item);
-		}
-	}
+    private static GeoPoint geocentricToGeopoint(GeocentricCoordinate coord) {
+        Gcc_To_Gdc_Converter.Init(new WE_Ellipsoid());
+        Gcc_Coord_3d gcc = new Gcc_Coord_3d(coord.getX(), coord.getY(), coord.getZ());
+        Gdc_Coord_3d gdc = new Gdc_Coord_3d();
+        Gcc_To_Gdc_Converter.Convert(gcc, gdc);
+        return new GeoPoint((int) (gdc.latitude * 1E6), (int) (gdc.longitude * 1E6));
+    }
 
-	@Override
-	public void onBackPressed() {
-		this.moveTaskToBack(true);
-	}
+    private class NavigationGameOverlay extends ItemizedOverlay<OverlayItem> {
 
-	@Override
-	protected boolean isRouteDisplayed() {
-		return false;
-	}
+        private final List<OverlayItem> overlayItems = new ArrayList<OverlayItem>();
 
-	@Override
-	public void receivePositionUpdate(GeocentricCoordinate pt) {
-		Gcc_To_Gdc_Converter.Init(new WE_Ellipsoid());
-		Gcc_Coord_3d gcc = new Gcc_Coord_3d(pt.getX(),pt.getY(),pt.getZ());
-		Gdc_Coord_3d gdc = new Gdc_Coord_3d();
-		Gcc_To_Gdc_Converter.Convert(gcc, gdc);
-		mapController.animateTo(new GeoPoint((int)(gdc.latitude * 1E6), (int)(gdc.longitude * 1E6)));	
-	}
+        public NavigationGameOverlay(Drawable defaultMarker) {
+            super(boundCenter(defaultMarker));
+            populate();
+        }
 
-	private void centerOnLocation() {
-		GeocentricCoordinate pt = GameManager.getInstance().getPlayerEntity().getPosition();
-		Gcc_To_Gdc_Converter.Init(new WE_Ellipsoid());
-		Gcc_Coord_3d gcc = new Gcc_Coord_3d(pt.getX(), pt.getY(), pt.getZ());
-		Gdc_Coord_3d gdc = new Gdc_Coord_3d();
-		Gcc_To_Gdc_Converter.Convert(gcc, gdc);
-		mapController.animateTo(new GeoPoint((int) (gdc.latitude * 1E6), (int) (gdc.longitude * 1E6)));
-	}
-	
-private void centerOnPlayArea() {
-		
-		
-		if (latitude != 0 || longitude != 0 && (initX != 0 && initY !=0)) {
-			
-			mapController.animateTo(new GeoPoint((int)(latitude * 1E6), (int)(longitude * 1E6)));
-			initX = latitude;
-			initY = longitude;
-			}
-		        		
-		else if (initX == 0 && initY ==0) {
-		GeocentricCoordinate pt = GameManager.getInstance().getPlayerEntity().getPosition();
+        public void removeOverlayItem(OverlayItem overlayItem) {
+            synchronized (overlayItems) {
+                overlayItems.remove(overlayItem);
+            }
+            populate();
+        }
 
-		Gcc_To_Gdc_Converter.Init(new WE_Ellipsoid());
-		Gcc_Coord_3d gcc = new Gcc_Coord_3d(pt.getX(),pt.getY(),pt.getZ());
-		Gdc_Coord_3d gdc = new Gdc_Coord_3d();
-		Gcc_To_Gdc_Converter.Convert(gcc, gdc); 
-		mapController.animateTo(new GeoPoint((int)(gdc.latitude * 1E6), (int)(gdc.longitude * 1E6)));	
-		
-		latitude = gdc.latitude;
-		longitude = gdc.longitude;
-		}
-		
-	}
-	
-	
-	
-	
-	private void onGameOver() {
-		StringBuilder strBuilder = new StringBuilder();
-		strBuilder.append("You have died.\n");
-		strBuilder.append("Your score this session was ");
-		strBuilder.append(GameManager.getInstance().getCurrentScore());
-		strBuilder.append(".\n");
-		strBuilder.append("Would you like to try again?");
-		
-		AlertDialog.Builder builder = new AlertDialog.Builder(this);
-		builder.setMessage(strBuilder.toString()).
-			setCancelable(false).
-			setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-				@Override
-				public void onClick(DialogInterface dialog, int which) {
-					GameManager.getInstance().restart();
-				}
-			}).
-			setNegativeButton("Surrender", new DialogInterface.OnClickListener() {
-				@Override
-				public void onClick(DialogInterface dialog, int which) {
-					GameManager.getInstance().restart();
-					NavigationGameActivity.this.moveTaskToBack(true);
-				}
-		});
-		AlertDialog alert = builder.create();
-		alert.show();	
-	}
+        public void addOverlayItem(OverlayItem overlayItem) {
+            synchronized (overlayItems) {
+                overlayItems.add(overlayItem);
+            }
+            populate();
+        }
+
+        @Override
+        protected OverlayItem createItem(int i) {
+            return overlayItems.get(i);
+        }
+
+        // Returns present number of items in list
+        @Override
+        public int size() {
+            return overlayItems.size();
+        }
+    }
+
+    private class SimpleNavigationGameOverlay extends NavigationGameOverlay {
+
+        private final String overlayItemTitle, overlayItemSnippet;
+
+        public SimpleNavigationGameOverlay(Drawable defaultMarker, String overlayItemTitle, String overlayItemSnippet) {
+            super(boundCenter(defaultMarker));
+            this.overlayItemTitle = overlayItemTitle;
+            this.overlayItemSnippet = overlayItemSnippet;
+            populate();
+        }
+
+        public OverlayItem addOverlayItem(GeoPoint position) {
+            OverlayItem newItem = new OverlayItem(position, overlayItemTitle, overlayItemSnippet);
+            addOverlayItem(newItem);
+            return newItem;
+        }
+    }
+
+    private class PlayerNavigationOverlay extends SimpleNavigationGameOverlay {
+
+        private final static String PLAYER_TITLE = "Player";
+
+        private final static String PLAYER_SNIPPET = "The player.";
+
+        OverlayItem playerOverlayItem = null;
+
+        public PlayerNavigationOverlay(Drawable defaultMarker) {
+            super(boundCenter(defaultMarker), PLAYER_TITLE, PLAYER_SNIPPET);
+            populate();
+        }
+
+        public void updatePlayerOverlayItem(GeoPoint position) {
+            removeOverlayItem(playerOverlayItem);
+            playerOverlayItem = addOverlayItem(position);
+        }
+    }
+
+    private class WaypointNavigationOverlay extends SimpleNavigationGameOverlay {
+        private final static String WAYPOINT_TITLE = "Waypoint";
+
+        private final static String WAYPOINT_SNIPPET = "A player objective.";
+
+        public WaypointNavigationOverlay(Drawable defaultMarker) {
+            super(boundCenter(defaultMarker), WAYPOINT_TITLE, WAYPOINT_SNIPPET);
+            populate();
+        }
+
+        @Override
+        protected boolean onTap(int index) {
+            return true;
+        }
+    }
+
+    private void regeneratePlayArea() {
+        List<GameEntity> toRemove = new ArrayList<GameEntity>();
+        synchronized (entityToOverlayItemMap) {
+            for (GameEntity i : entityToOverlayItemMap.keySet()) {
+                if (i.getTag() == GameEntityTagEnum.WAYPOINT) {
+                    waypointOverlay.removeOverlayItem(entityToOverlayItemMap.get(i));
+                    toRemove.add(i);
+                } else if (i.getTag() == GameEntityTagEnum.POWER_UP) {
+                    powerUpOverlay.removeOverlayItem(entityToOverlayItemMap.get(i));
+                    toRemove.add(i);
+                }
+            }
+        }
+        for (GameEntity i : toRemove) {
+            i.destroyEntity();
+        }
+        GameManager.getInstance().addWaypoint();
+        GameManager.getInstance().addPowerUp();
+    }
+
+    @Override
+    public void onPlayAreaCenterChanged(GeocentricCoordinate position) {
+        regeneratePlayArea();
+    }
+
+    @Override
+    public void onPlayAreaRadiusChanged(float radius) {
+        regeneratePlayArea();
+    }
+
+    @Override
+    public void onGameDifficultyChanged(DifficultyEnum difficulty) {
+        // Do nothing
+    }
+
+    @Override
+    public void onLifeformHealthChange(int currentHealth, int maxHealth) {
+        if (healthTextView == null) {
+            healthTextView = (TextView) findViewById(R.id.healthTextView);
+        }
+        healthTextView.setText("Health: " + currentHealth + " / " + maxHealth);
+        healthTextView.invalidate();
+    }
+
+    @Override
+    public void onScoreUpdated(int score) {
+        if(scoreTextView == null) {
+            scoreTextView = (TextView) findViewById(R.id.scoreTextView);
+        }
+        scoreTextView.setText("Score: " + score);
+        scoreTextView.invalidate();        
+    }
 
 }
