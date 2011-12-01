@@ -103,7 +103,7 @@ public class NavigationGameActivity extends AbstractGameMapActivity implements P
 				while (position == null || position.isZero()) {
 					synchronized (this) {
 						try {
-
+							
 							this.wait(10);
 						} catch (InterruptedException e) {
 						}
@@ -349,10 +349,10 @@ public class NavigationGameActivity extends AbstractGameMapActivity implements P
 	
 	private void onGameOver() {
 		StringBuilder strBuilder = new StringBuilder();
-		strBuilder.append("You have died.");
+		strBuilder.append("You have died.\n");
 		strBuilder.append("Your score this session was ");
 		strBuilder.append(GameManager.getInstance().getCurrentScore());
-		strBuilder.append(".");
+		strBuilder.append(".\n");
 		strBuilder.append("Would you like to try again?");
 		
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);

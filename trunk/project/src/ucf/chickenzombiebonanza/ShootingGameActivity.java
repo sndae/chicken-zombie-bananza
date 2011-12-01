@@ -30,12 +30,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import ucf.chickenzombiebonanza.android.opengl.ShootingGameGLES20Renderer;
 import ucf.chickenzombiebonanza.common.GeocentricCoordinate;
 import ucf.chickenzombiebonanza.common.LocalOrientation;
 import ucf.chickenzombiebonanza.common.Vector3d;
 import ucf.chickenzombiebonanza.common.sensor.OrientationListener;
+import ucf.chickenzombiebonanza.game.DifficultyEnum;
 import ucf.chickenzombiebonanza.game.GameManager;
 import ucf.chickenzombiebonanza.game.GameStateEnum;
 import ucf.chickenzombiebonanza.game.entity.GameEntity;
@@ -44,11 +46,14 @@ import ucf.chickenzombiebonanza.game.entity.GameEntityStateListener;
 import ucf.chickenzombiebonanza.game.entity.GameEntityTagEnum;
 import ucf.chickenzombiebonanza.game.entity.LifeformEntity;
 import ucf.chickenzombiebonanza.game.entity.LifeformEntityStateEnum;
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.os.PowerManager;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.Window;
 import android.view.WindowManager;
@@ -71,15 +76,19 @@ public class ShootingGameActivity extends AbstractGameActivity implements GameEn
 	// In meters/second
 	private float currentEnemySpeed = 0.25f;
 	
+	private DifficultyEnum gameDifficulty = DifficultyEnum.EASY;
+	
+	private int enemyDestroyedCount = 0;
+	
 	private class MoveEntityThread extends Thread {
 		
 		private boolean isRunning = true, isPaused = false;
 		
-		public void onPause() {
+		public void pauseThread() {
 			isPaused = true;
 		}
 		
-		public void onResume() {
+		public void resumeThread() {
 			isPaused = false;
 		}
 		
@@ -127,6 +136,8 @@ public class ShootingGameActivity extends AbstractGameActivity implements GameEn
 	
 	MoveEntityThread moveEntityThread = new MoveEntityThread();
 	
+	AtomicBoolean spawnEnemyBoolean = new AtomicBoolean(true);
+	
 	@Override
 	protected void onCreate(Bundle bundle) {
 		super.onCreate(bundle);
@@ -149,7 +160,8 @@ public class ShootingGameActivity extends AbstractGameActivity implements GameEn
         GameManager.getInstance().registerGameEntityListener(this, new GameEntityTagEnum[]{GameEntityTagEnum.LIFEFORM});
         GameManager.getInstance().getPlayerEntity().registerGameEntityStateListener(this);        
 		final ProgressDialog dialog = ProgressDialog.show(this, "Waiting for player position",
-				"Waiting for GPS position...", true);Thread loadThread = new Thread() {
+				"Waiting for GPS position...", true);
+		Thread loadThread = new Thread() {
             @Override
             public void run() {
                 while(GameManager.getInstance().getPlayerEntity().getPosition().isZero()) {
@@ -163,17 +175,7 @@ public class ShootingGameActivity extends AbstractGameActivity implements GameEn
                 dialog.dismiss();
                 shootingGameLocation = GameManager.getInstance().getPlayerEntity().getPosition();
                 
-                Timer spawnEnemyTimer = new Timer();
-                spawnEnemyTimer.schedule(new TimerTask() {
-
-                    @Override
-                    public void run() {
-                    	GameManager.getInstance().addEnemy(getGameLocation(), 8, 3);
-                    }
-                    
-                }, 0, 10000);
-                
-                moveEntityThread.start();
+                startGame();
             }
         };
         
@@ -184,7 +186,7 @@ public class ShootingGameActivity extends AbstractGameActivity implements GameEn
     protected void onResume() {
         super.onResume();
         glView.onResume();
-        moveEntityThread.onResume();
+        moveEntityThread.resumeThread();
         GameManager.getInstance().getPlayerEntity().getOrientationPublisher().resumeSensor();
         wakeLock.acquire();
     }
@@ -193,7 +195,7 @@ public class ShootingGameActivity extends AbstractGameActivity implements GameEn
 	protected void onPause() {
 		super.onPause();
 		glView.onPause();
-		moveEntityThread.onPause();
+		moveEntityThread.pauseThread();
 		GameManager.getInstance().getPlayerEntity().getOrientationPublisher().pauseSensor();
 		wakeLock.release();
 	}
@@ -210,13 +212,34 @@ public class ShootingGameActivity extends AbstractGameActivity implements GameEn
 	@Override
 	public void onDestroy() {
 	    super.onDestroy();
-	    
+	    GameManager.getInstance().updateGameState(GameStateEnum.GAME_NAVIGATION);
 	}
 	
 	@Override
 	public void onBackPressed() {
-		//TODO: This is only temporary, needs to query the user first to ensure that they want to exit.
-		GameManager.getInstance().updateGameState(GameStateEnum.GAME_NAVIGATION);
+		StringBuilder strBuilder = new StringBuilder();
+		strBuilder.append("Are you sure you want to run away? Are you chicken?");
+		
+		AlertDialog.Builder cancelDialog = new AlertDialog.Builder(this);
+		cancelDialog.setMessage(strBuilder.toString()).setCancelable(false).setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+		
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				moveEntityThread.resumeThread();
+				spawnEnemyBoolean.getAndSet(true);
+				endGame(false);				
+			}
+		}).setNegativeButton("No", new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				moveEntityThread.resumeThread();
+				spawnEnemyBoolean.getAndSet(true);
+			}
+		});
+		AlertDialog dialog = cancelDialog.create();
+		moveEntityThread.pauseThread();
+		spawnEnemyBoolean.getAndSet(false);
+		dialog.show();
 	}
 	
 	public GeocentricCoordinate getGameLocation() {
@@ -272,6 +295,13 @@ public class ShootingGameActivity extends AbstractGameActivity implements GameEn
 
     @Override
     public void onGameEntityDeleted(GameEntity entity) {
+    	if(entity.getTag() == GameEntityTagEnum.LIFEFORM) {
+    		LifeformEntity lifeform = (LifeformEntity)entity;
+    		if(lifeform.isEnemy() && lifeform.isDead()) {
+    			enemyDefeated();
+    		}
+    	}
+    	
         synchronized (gameEntities) {
             gameEntities.remove(entity);
         }
@@ -279,11 +309,57 @@ public class ShootingGameActivity extends AbstractGameActivity implements GameEn
 
 	@Override
 	public void onGameEntityDestroyed(GameEntity listener) {
-		this.finish();		
+		endGame(false);	
 	}
 
 	@Override
 	public void receiveOrientationUpdate(LocalOrientation orientation) {
 		renderer.receiveOrientationUpdate(orientation);		
+	}
+	
+	private void enemyDefeated() {
+		enemyDestroyedCount++;
+		if(enemyDestroyedCount >= gameDifficulty.getEnemyCount()) {
+			endGame(true);
+		}
+	}
+	
+	private void startGame() {
+		
+		gameDifficulty = GameManager.getInstance().getGameSettings().getGameDifficulty();
+		
+		enemyDestroyedCount = 0;
+		
+        Timer spawnEnemyTimer = new Timer();
+        spawnEnemyTimer.schedule(new TimerTask() {
+
+            @Override
+            public void run() {
+            	if(spawnEnemyBoolean.get()) {
+            		GameManager.getInstance().addEnemy(getGameLocation(), 8, 3);
+            	}
+            }
+            
+        }, 0, gameDifficulty.getEnemySpawnFrequency());
+        
+        moveEntityThread.start();
+	}
+	
+	private void endGame(boolean success) {
+		if(success) {
+			GameManager.getInstance().updateScore(gameDifficulty.getSurvivalScore());
+			
+			StringBuilder strBuilder = new StringBuilder();
+			strBuilder.append("You have survived!\n");
+			strBuilder.append("Your score so far is ");
+			strBuilder.append(GameManager.getInstance().getCurrentScore());
+			strBuilder.append(".");
+			
+			AlertDialog.Builder successAlert = new AlertDialog.Builder(this);
+			successAlert.setMessage(strBuilder.toString()).setCancelable(true).setPositiveButton("Continue", null);
+			AlertDialog dialog = successAlert.create();
+			dialog.show();
+		}
+		finish();
 	}
 }
