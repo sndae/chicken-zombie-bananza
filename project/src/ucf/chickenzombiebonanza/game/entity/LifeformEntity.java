@@ -82,7 +82,7 @@ public class LifeformEntity extends GameEntity implements HasInventory {
 	
 	private void setHealth(int currentHealth){
 		this.currentHealth = currentHealth > maxHealth ? maxHealth : currentHealth;
-		//this.currentHealth = this.currentHealth < 0 ? 0 : this.currentHealth;
+		this.currentHealth = this.currentHealth >= 0 ? this.currentHealth : 0;
 		updateHealthListeners();
 	}
 	
@@ -149,7 +149,7 @@ public class LifeformEntity extends GameEntity implements HasInventory {
 	
 	public void damageEntity(int damage) {
 		setHealth(currentHealth - damage);
-		if(currentHealth < 0) {
+		if(currentHealth <= 0) {
 			destroyEntity();
 		}
 	}

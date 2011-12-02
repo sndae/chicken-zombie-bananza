@@ -45,13 +45,13 @@ public abstract class AbstractGameMapActivity extends MapActivity implements Gam
     }
 
     @Override
-    public void onStop() {
-        super.onStop();
-        AbstractGameActivity.onStopStatic(this);
+    public void onDestroy() {
+        super.onDestroy();
+        AbstractGameActivity.onDestroyStatic(this);
     }
 
     @Override
-    public void gameStateChanged(GameStateEnum state, Object obj) {
-        AbstractGameActivity.gameStateChangedStatic(this, state, obj);
+    public void gameStateChanged(GameStateEnum state) {
+        AbstractGameActivity.gameStateChangedStatic(this, state);
     }
 }
