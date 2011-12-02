@@ -45,29 +45,26 @@ public abstract class AbstractGameActivity extends Activity implements GameState
     }
 
     @Override
-    protected void onStop() {
-        super.onStop();
-        AbstractGameActivity.onStopStatic(this);
+    protected void onDestroy() {
+        super.onDestroy();
+        AbstractGameActivity.onDestroyStatic(this);
     }
 
     @Override
-    public void gameStateChanged(GameStateEnum state, Object obj) {
-        AbstractGameActivity.gameStateChangedStatic(this, state, obj);
+    public void gameStateChanged(GameStateEnum state) {
+        AbstractGameActivity.gameStateChangedStatic(this, state);
     }
 
     public static void onCreateStatic(GameStateListener listener) {
         GameManager.getInstance().addStateListener(listener);
     }
 
-    public static void onStopStatic(GameStateListener listener) {
+    public static void onDestroyStatic(GameStateListener listener) {
         GameManager.getInstance().removeStateListener(listener);
     }
 
-    public static void gameStateChangedStatic(Activity activity, GameStateEnum state, Object obj) {
-        if (state == GameStateEnum.GAME_LOADING) {
-            Intent loadIntent = new Intent(activity, GameLoadingActivity.class);
-            activity.startActivity(loadIntent);
-        } else if (state == GameStateEnum.GAME_NAVIGATION) {
+    public static void gameStateChangedStatic(Activity activity, GameStateEnum state) {
+        if (state == GameStateEnum.GAME_NAVIGATION) {
             Intent navigationIntent = new Intent(activity, NavigationGameActivity.class);
             activity.startActivity(navigationIntent);
         } else if (state == GameStateEnum.GAME_SHOOTING) {
@@ -76,8 +73,7 @@ public abstract class AbstractGameActivity extends Activity implements GameState
         } else if (state == GameStateEnum.GAME_SETTINGS) {
             Intent settingsIntent = new Intent(activity, GameSettingsActivity.class);
             activity.startActivity(settingsIntent);
-        }
-        else if (state == GameStateEnum.GAME_PLAYAREA) {
+        } else if (state == GameStateEnum.GAME_PLAYAREA) {
         	Intent playareaIntent = new Intent(activity, PlayAreaActivity.class);
         	activity.startActivity(playareaIntent);
         }

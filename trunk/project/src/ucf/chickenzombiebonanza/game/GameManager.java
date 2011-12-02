@@ -30,9 +30,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import ucf.chickenzombiebonanza.common.GeocentricCoordinate;
 import ucf.chickenzombiebonanza.common.LocalOrientation;
@@ -53,7 +50,7 @@ import ucf.chickenzombiebonanza.game.item.WeaponInventoryObject;
 /**
  * 
  */
-public class GameManager implements GameSettingsChangeListener, GameEntityStateListener {
+public class GameManager implements GameSettingsChangeListener {
 
 	private static GameManager instance = null;
 
@@ -87,49 +84,12 @@ public class GameManager implements GameSettingsChangeListener, GameEntityStateL
 
 	}
 
-	public void start(final PositionPublisher positionPublisher,
-			final OrientationPublisher orientationPublisher) {
-		updateGameState(GameStateEnum.GAME_LOADING);
-		
-		playerEntity = new LifeformEntity(false, 200, positionPublisher, orientationPublisher);
-		playerEntity.damageEntity(100);
+	public void start(final PositionPublisher positionPublisher, final OrientationPublisher orientationPublisher) {
+		playerEntity = new LifeformEntity(false, 50, positionPublisher, orientationPublisher);
 		playerEntity.addItem(WeaponInventoryObject.PISTOL_WEAPON);
 		playerEntity.addItem(HealthInventoryObject.SMALL_HEALTH_KIT);
-		playerEntity.addItem(HealthInventoryObject.SMALL_HEALTH_KIT);
-		playerEntity.addItem(HealthInventoryObject.LARGE_HEALTH_KIT);
-		playerEntity.registerGameEntityStateListener(this);
-
-		final AtomicBoolean loadingScreenDurationMet = new AtomicBoolean(false);
-
-		// Start a timer to make the loading screen stay up a minimum period of
-		// time
-		Timer waitTimer = new Timer();
-		waitTimer.schedule(new TimerTask() {
-			@Override
-			public void run() {
-				loadingScreenDurationMet.set(true);
-			}
-		}, 5000);
-
-		Thread loadThread = new Thread() {
-			@Override
-			public void run() {
-				while (!loadingScreenDurationMet.get()) {
-					synchronized (this) {
-						try {
-							this.wait(100);
-						} catch (InterruptedException e) {
-						}
-					}
-				}
-
-				updateGameState(GameStateEnum.GAME_NAVIGATION);
-			}
-		};
-
-		loadThread.start();
 	}
-	
+
 	public void restart() {
 		currentScore = 0;
 		getPlayerEntity().healEntity();
@@ -156,20 +116,12 @@ public class GameManager implements GameSettingsChangeListener, GameEntityStateL
 	 * @param state
 	 * @param obj
 	 */
-	public void updateGameState(GameStateEnum state, Object obj) {
+	public void updateGameState(GameStateEnum state) {
 		synchronized(stateListeners) {
     		for (GameStateListener i : stateListeners) {
-    			i.gameStateChanged(state, obj);
+    			i.gameStateChanged(state);
     		}
 		}
-	}
-
-	/**
-	 * 
-	 * @param state
-	 */
-	public void updateGameState(GameStateEnum state) {
-		updateGameState(state, null);
 	}
 	
 	public void addEnemy(GeocentricCoordinate gameCenter, float minRadius, float maxRadius) {
@@ -331,13 +283,7 @@ public class GameManager implements GameSettingsChangeListener, GameEntityStateL
 			this.listener = listener;
 			this.filterTags = filterTags;
 		}
-	}
-
-	@Override
-	public void onGameEntityDestroyed(GameEntity listener) {
-		this.updateGameState(GameStateEnum.GAME_NAVIGATION);		
-	}
-	
+	}	
 	public void updateScore(int amount) {
 		if(amount > 0) {
 			currentScore += amount;

@@ -26,9 +26,13 @@
  */
 package ucf.chickenzombiebonanza;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
 import ucf.chickenzombiebonanza.android.sensor.GpsListener;
 import ucf.chickenzombiebonanza.android.sensor.GyroscopeListener;
 import ucf.chickenzombiebonanza.game.GameManager;
+import ucf.chickenzombiebonanza.game.GameStateEnum;
 import android.os.Bundle;
 
 /**
@@ -42,12 +46,14 @@ public class MainActivity extends AbstractGameActivity {
         setContentView(R.layout.loading);
 
         GameManager.getInstance().start(new GpsListener(this), new GyroscopeListener(this));
-    }
-    
-    @Override
-    public void onPause() {
-        super.onPause();
-        finish();
+        
+        Timer loadTimer = new Timer();
+        loadTimer.schedule(new TimerTask(){
+			@Override
+			public void run(){
+				GameManager.getInstance().updateGameState(GameStateEnum.GAME_NAVIGATION);
+				finish();
+			}}, 5000);
     }
 
     @Override

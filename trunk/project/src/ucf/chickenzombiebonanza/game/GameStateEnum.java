@@ -35,8 +35,6 @@ public enum GameStateEnum {
 	
 	/** No game state has been established */
 	NO_GAME_STATE,
-	/** The game is loading */
-	GAME_LOADING,
 	/** The navigation game is being played */
 	GAME_NAVIGATION,
 	/** The shooting game is being played */

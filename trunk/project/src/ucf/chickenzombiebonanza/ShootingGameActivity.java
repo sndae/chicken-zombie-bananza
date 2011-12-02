@@ -39,17 +39,18 @@ import ucf.chickenzombiebonanza.common.Vector3d;
 import ucf.chickenzombiebonanza.common.sensor.OrientationListener;
 import ucf.chickenzombiebonanza.game.DifficultyEnum;
 import ucf.chickenzombiebonanza.game.GameManager;
-import ucf.chickenzombiebonanza.game.GameStateEnum;
 import ucf.chickenzombiebonanza.game.entity.GameEntity;
 import ucf.chickenzombiebonanza.game.entity.GameEntityListener;
 import ucf.chickenzombiebonanza.game.entity.GameEntityStateListener;
 import ucf.chickenzombiebonanza.game.entity.GameEntityTagEnum;
 import ucf.chickenzombiebonanza.game.entity.LifeformEntity;
 import ucf.chickenzombiebonanza.game.entity.LifeformHealthListener;
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnCompletionListener;
 import android.opengl.GLSurfaceView;
@@ -67,7 +68,7 @@ import android.widget.TextView;
 /**
  * 
  */
-public class ShootingGameActivity extends AbstractGameActivity implements GameEntityListener, GameEntityStateListener, OrientationListener, LifeformHealthListener {
+public class ShootingGameActivity extends Activity implements GameEntityListener, GameEntityStateListener, OrientationListener, LifeformHealthListener {
 	
     private final List<GameEntity> gameEntities = new ArrayList<GameEntity>();
     
@@ -86,11 +87,13 @@ public class ShootingGameActivity extends AbstractGameActivity implements GameEn
 	
 	private int enemyDestroyedCount = 0;
 	
-	private final Handler handler = new Handler();
+	private Handler handler;
 	
 	private TextView healthTextView;
 	
     private String healthString;
+    
+    private AudioManager audioManager;
     
     private final Runnable updatePlayerHealth = new Runnable() {
         @Override
@@ -108,6 +111,13 @@ public class ShootingGameActivity extends AbstractGameActivity implements GameEn
         public void run() {
             endGame(true);
         }
+    };
+    
+    private final Runnable endGameFailureRunnable = new Runnable() {
+    	@Override
+    	public void run() {
+    		endGame(false);
+    	}
     };
 
 	private class EntityAIThread extends Thread {
@@ -172,6 +182,8 @@ public class ShootingGameActivity extends AbstractGameActivity implements GameEn
 	protected void onCreate(Bundle bundle) {
 		super.onCreate(bundle);
 		
+		handler = new Handler();
+		
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
@@ -185,10 +197,11 @@ public class ShootingGameActivity extends AbstractGameActivity implements GameEn
         healthTextView = (TextView)overlayView.findViewById(R.id.healthTextView);
         
         addContentView(overlayView, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
-        
-        		
+                		
 		PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
         wakeLock = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK, "DoNotDimScreen");
+        
+        audioManager = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
 	}
 
     @Override
@@ -248,13 +261,7 @@ public class ShootingGameActivity extends AbstractGameActivity implements GameEn
         GameManager.getInstance().getPlayerEntity().unregisterHealthListener(this);
         moveEntityThread.cancel();
     }
-	
-	@Override
-	public void onDestroy() {
-	    super.onDestroy();
-	    GameManager.getInstance().updateGameState(GameStateEnum.GAME_NAVIGATION);
-	}
-	
+		
 	@Override
 	public void onBackPressed() {
 		StringBuilder strBuilder = new StringBuilder();
@@ -267,7 +274,7 @@ public class ShootingGameActivity extends AbstractGameActivity implements GameEn
 			public void onClick(DialogInterface dialog, int which) {
 				moveEntityThread.resumeThread();
 				spawnEnemyBoolean.getAndSet(true);
-				endGame(false);				
+				handler.post(endGameFailureRunnable);
 			}
 		}).setNegativeButton("No", new DialogInterface.OnClickListener() {
 			@Override
@@ -310,30 +317,36 @@ public class ShootingGameActivity extends AbstractGameActivity implements GameEn
             }
 		}
 		
-		MediaPlayer mp = MediaPlayer.create(this, R.raw.gunfire);   
-        mp.start();
-        mp.setOnCompletionListener(new OnCompletionListener() {
-
-            @Override
-            public void onCompletion(MediaPlayer mp) {
-                mp.release();
-            }
-        });
+		if(audioManager.getRingerMode() != AudioManager.RINGER_MODE_SILENT &&
+				audioManager.getRingerMode() != AudioManager.RINGER_MODE_VIBRATE) {
+    		MediaPlayer mp = MediaPlayer.create(this, R.raw.gunfire);   
+            mp.start();
+            mp.setOnCompletionListener(new OnCompletionListener() {
+    
+                @Override
+                public void onCompletion(MediaPlayer mp) {
+                    mp.release();
+                }
+            });
+		}
 
         for (LifeformEntity i : damagedEntities) {
             i.damageEntity(5);
         }
         
         if(!damagedEntities.isEmpty()) {
-    		mp = MediaPlayer.create(this, R.raw.chicken);   
-            mp.start();
-            mp.setOnCompletionListener(new OnCompletionListener() {
-
-                @Override
-                public void onCompletion(MediaPlayer mp) {
-                    mp.release();
-                }
-            });
+    		if(audioManager.getRingerMode() != AudioManager.RINGER_MODE_SILENT &&
+    				audioManager.getRingerMode() != AudioManager.RINGER_MODE_VIBRATE) {
+        		MediaPlayer mp = MediaPlayer.create(this, R.raw.chicken);   
+                mp.start();
+                mp.setOnCompletionListener(new OnCompletionListener() {
+    
+                    @Override
+                    public void onCompletion(MediaPlayer mp) {
+                        mp.release();
+                    }
+                });
+    		}
         }
     }
 
@@ -383,7 +396,7 @@ public class ShootingGameActivity extends AbstractGameActivity implements GameEn
 
 	@Override
 	public void onGameEntityDestroyed(GameEntity listener) {
-		endGame(false);	
+		handler.post(endGameFailureRunnable);
 	}
 
 	@Override
@@ -433,13 +446,13 @@ public class ShootingGameActivity extends AbstractGameActivity implements GameEn
             successAlert.setMessage(strBuilder.toString()).setCancelable(true).setPositiveButton("Continue", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface arg0, int arg1) {
-                    ShootingGameActivity.this.finish();
+                	finish();
                 }
             });
             AlertDialog dialog = successAlert.create();
             dialog.show();
         } else {
-            finish();
+        	finish();
 		}
 	}
 

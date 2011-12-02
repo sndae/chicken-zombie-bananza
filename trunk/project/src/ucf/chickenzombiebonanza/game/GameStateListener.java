@@ -39,6 +39,6 @@ public interface GameStateListener {
 	 * @param state The state the game is now in.
 	 * @param obj The object represents the state the game is in.
 	 */
-	public void gameStateChanged(GameStateEnum state, Object obj);
+	public void gameStateChanged(GameStateEnum state);
 
 }
