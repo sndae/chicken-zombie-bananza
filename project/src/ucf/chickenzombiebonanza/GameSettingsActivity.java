@@ -142,24 +142,17 @@ public final class GameSettingsActivity extends AbstractGameActivity {
 				
 				
 				Editable radiusConvert = playAreaRadius.getText();//Gets the radius from the textbox
+				
 				String radiusString = radiusConvert.toString();//Converts the Radius to a String
+				String blankTemp = "";
+				if(radiusString.trim().equals(blankTemp));
+				{
+					radiusString = "5";
+				}
 				final Float radiusValue = new Float(radiusString);
 				
-				String blankTemp = "";
-				
-				//if(radiusValue > 0.0f && radiusValue < 500.0f)
-				if(!radiusString.equals(blankTemp))
-				{
-					//radiusValue = new Float("5");//Sets radius to a float value
 					GameManager.getInstance().getGameSettings().setPlayAreaRadius(radiusValue);
-				}
-				else
-				{
-					GameManager.getInstance().getGameSettings().setPlayAreaRadius(5);
-				}
 				
-				
-				GameManager.getInstance().getGameSettings().setPlayAreaRadius(radiusValue);
 				
 				alertbox.setPositiveButton("Done", new DialogInterface.OnClickListener() {
 
