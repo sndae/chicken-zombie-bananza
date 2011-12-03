@@ -24,28 +24,28 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package ucf.chickenzombiebonanza;
+package ucf.chickenzombiebonanza.android;
 
-import ucf.chickenzombiebonanza.game.GameManager;
 import ucf.chickenzombiebonanza.game.GameStateEnum;
 import ucf.chickenzombiebonanza.game.GameStateListener;
-import android.app.Activity;
-import android.content.Intent;
+
 import android.os.Bundle;
+
+import com.google.android.maps.MapActivity;
 
 /**
  * 
  */
-public abstract class AbstractGameActivity extends Activity implements GameStateListener {
+public abstract class AbstractGameMapActivity extends MapActivity implements GameStateListener {
 
     @Override
-    protected void onCreate(Bundle bundle) {
+    public void onCreate(Bundle bundle) {
         super.onCreate(bundle);
         AbstractGameActivity.onCreateStatic(this);
     }
 
     @Override
-    protected void onDestroy() {
+    public void onDestroy() {
         super.onDestroy();
         AbstractGameActivity.onDestroyStatic(this);
     }
@@ -53,29 +53,5 @@ public abstract class AbstractGameActivity extends Activity implements GameState
     @Override
     public void gameStateChanged(GameStateEnum state) {
         AbstractGameActivity.gameStateChangedStatic(this, state);
-    }
-
-    public static void onCreateStatic(GameStateListener listener) {
-        GameManager.getInstance().addStateListener(listener);
-    }
-
-    public static void onDestroyStatic(GameStateListener listener) {
-        GameManager.getInstance().removeStateListener(listener);
-    }
-
-    public static void gameStateChangedStatic(Activity activity, GameStateEnum state) {
-        if (state == GameStateEnum.GAME_NAVIGATION) {
-            Intent navigationIntent = new Intent(activity, NavigationGameActivity.class);
-            activity.startActivity(navigationIntent);
-        } else if (state == GameStateEnum.GAME_SHOOTING) {
-            Intent shootingIntent = new Intent(activity, ShootingGameActivity.class);
-            activity.startActivity(shootingIntent);
-        } else if (state == GameStateEnum.GAME_SETTINGS) {
-            Intent settingsIntent = new Intent(activity, GameSettingsActivity.class);
-            activity.startActivity(settingsIntent);
-        } else if (state == GameStateEnum.GAME_PLAYAREA) {
-        	Intent playareaIntent = new Intent(activity, PlayAreaActivity.class);
-        	activity.startActivity(playareaIntent);
-        }
     }
 }

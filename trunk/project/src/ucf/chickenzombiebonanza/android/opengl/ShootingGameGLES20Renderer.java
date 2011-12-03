@@ -38,12 +38,12 @@ import java.nio.IntBuffer;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
+import ucf.chickenzombiebonanza.android.R;
+import ucf.chickenzombiebonanza.android.ShootingGameActivity;
 import ucf.chickenzombiebonanza.common.GeocentricCoordinate;
 import ucf.chickenzombiebonanza.common.LocalOrientation;
 import ucf.chickenzombiebonanza.common.Matrix44d;
 import ucf.chickenzombiebonanza.game.entity.GameEntity;
-import ucf.chickenzombiebonanza.R;
-import ucf.chickenzombiebonanza.ShootingGameActivity;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;

@@ -24,7 +24,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package ucf.chickenzombiebonanza;
+package ucf.chickenzombiebonanza.android;
 
 import java.util.ArrayList;
 import java.util.List;
