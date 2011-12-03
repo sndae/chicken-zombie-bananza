@@ -25,7 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package ucf.chickenzombiebonanza;
+package ucf.chickenzombiebonanza.android;
 
 import geotransform.coords.Gcc_Coord_3d;
 import geotransform.coords.Gdc_Coord_3d;
