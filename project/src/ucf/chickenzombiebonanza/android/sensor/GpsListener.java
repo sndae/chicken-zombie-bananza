@@ -45,18 +45,17 @@ public class GpsListener extends PositionPublisher implements LocationListener {
 	public GpsListener(Context context) {
 		locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
 		locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
-		refreshGpsLocation();
+		refresh();
 	}
 
 	@Override
 	public GeocentricCoordinate getCurrentPosition() {
-		refreshGpsLocation();
 		return super.getCurrentPosition();
 	}
 
 	@Override
 	public void onResume() {
-		refreshGpsLocation();
+		refresh();
 	}
 
 	@Override
@@ -87,7 +86,8 @@ public class GpsListener extends PositionPublisher implements LocationListener {
 		return new GeocentricCoordinate(gcc.x, gcc.y, gcc.z);
 	}
 
-	private void refreshGpsLocation() {
+	@Override
+	public void refresh() {
 		Location currentPosition = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
 		if (currentPosition != null) {
 			updatePosition(locationToGcc(currentPosition));

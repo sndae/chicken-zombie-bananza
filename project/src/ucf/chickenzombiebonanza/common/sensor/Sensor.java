@@ -38,6 +38,8 @@ public abstract class Sensor {
 	
 	public abstract void onResume();
 	
+	public abstract void refresh();
+	
 	public boolean isSensorActive() {
 		return sensorState == SensorStateEnum.ACTIVE;
 	}

@@ -71,4 +71,7 @@ public class PositionPublisher extends Sensor {
     public void onResume() {
     }
 
+    @Override
+    public void refresh() {       
+    }  
 }
