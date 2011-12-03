@@ -124,6 +124,7 @@ public class NavigationGameActivity extends AbstractGameMapActivity implements P
                             this.wait(10);
                         } catch (InterruptedException e) {
                         }
+                        GameManager.getInstance().getPlayerEntity().getPositionPublisher().refresh();
                     }
                     position = GameManager.getInstance().getPlayerEntity().getPosition();
                 }
